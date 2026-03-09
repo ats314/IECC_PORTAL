@@ -1,0 +1,37 @@
+<table class="data-table">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Track</th>
+            <th>Status</th>
+            <th>Phase</th>
+            <th>Subgroup</th>
+            <th>Proponent</th>
+            <th>Code Section</th>
+            <th>Recommendation</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for p in proposals %}
+    <tr>
+        <td><a href="/proposals/{{ p.canonical_id }}">{{ p.canonical_id }}</a></td>
+        <td><span class="badge badge-{{ p.track }}">{{ p.track[:3]|upper }}</span></td>
+        <td>
+            {% if p.status == 'Decided' %}<span class="badge badge-decided">Decided</span>
+            {% elif p.status == 'Pending' %}<span class="badge badge-pending">Pending</span>
+            {% elif p.status == 'Withdrawn' %}<span class="badge badge-withdrawn">Withdrawn</span>
+            {% else %}<span class="badge badge-closed">{{ p.status }}</span>
+            {% endif %}
+        </td>
+        <td style="font-size: 0.8rem; color: var(--text-muted);">{{ p.phase }}</td>
+        <td>{{ p.current_subgroup or '—' }}</td>
+        <td style="font-size: 0.85rem;">{{ p.proponent or '—' }}</td>
+        <td style="font-size: 0.85rem;">{{ p.code_section or '—' }}</td>
+        <td style="font-size: 0.85rem;">{{ p.ca_recommendation or '—' }}</td>
+    </tr>
+    {% endfor %}
+    {% if not proposals %}
+    <tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 2rem;">No proposals match the current filters.</td></tr>
+    {% endif %}
+    </tbody>
+</table>

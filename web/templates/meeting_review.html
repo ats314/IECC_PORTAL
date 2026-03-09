@@ -1,0 +1,119 @@
+{% extends base_template|default("base.html") %}
+{% set active = "meetings" if user and user.role == "secretariat" else "home" %}
+{% block title %}Review Meeting — {{ meeting.body }} — ICC{% endblock %}
+
+{% block content %}
+<!-- Breadcrumb -->
+<div class="breadcrumb">
+    {% if user and user.role == "chair" %}
+    <a href="/home">My Meetings</a>
+    {% else %}
+    <a href="/meetings">Meetings</a>
+    {% endif %}
+    <span class="bc-sep">/</span>
+    <a href="/meeting/{{ meeting.id }}/portal">{{ meeting.body }}</a>
+    <span class="bc-sep">/</span>
+    <span>Review</span>
+</div>
+
+<div class="portal-header">
+    <h1>Review: {{ meeting.body }}</h1>
+    <div class="meta">
+        {{ meeting.meeting_date }} &bull;
+        <span class="badge badge-{{ meeting.track }}">{{ meeting.track|title }}</span> &bull;
+        {{ meeting.phase|replace('_', ' ')|title }} &bull;
+        {{ staged_actions|length }} actions staged
+        {% if has_modifications %}
+        &bull; <span style="color: #CE93D8;">{{ modification_count }} with modifications</span>
+        {% endif %}
+    </div>
+</div>
+
+{% if total_agenda and staged_actions|length < total_agenda %}
+<div class="alert alert-warning" style="margin-bottom: 1rem;">
+    <strong>Partial completion:</strong> {{ staged_actions|length }} of {{ total_agenda }} agenda items have actions recorded.
+    {{ total_agenda - staged_actions|length }} proposals still need action.
+    <a href="/meeting/{{ meeting.id }}/portal" style="margin-left: 0.5rem;">Return to Portal &rarr;</a>
+</div>
+{% endif %}
+
+<div class="card">
+    <div class="card-header">Actions Summary — Review Before Sending</div>
+
+    <table class="review-table">
+        <thead>
+            <tr>
+                <th>Proposal</th>
+                <th>Recommendation</th>
+                <th>Vote (F-A-NV)</th>
+                <th>Moved / Seconded</th>
+                <th>Reason</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for a in staged_actions %}
+        <tr>
+            <td>
+                <strong>{{ a.canonical_id }}</strong>
+            </td>
+            <td>
+                <strong{% if 'Modified' in a.recommendation %} style="color: #CE93D8;"{% endif %}>{{ a.recommendation }}</strong>
+                {% if a.modification_text %}
+                <div class="mod-text mod-rich">{{ a.modification_text|safe }}</div>
+                {% endif %}
+            </td>
+            <td>
+                {% if a.vote_for is not none %}
+                {{ a.vote_for }}-{{ a.vote_against }}-{{ a.vote_not_voting or 0 }}
+                {% else %}—{% endif %}
+            </td>
+            <td class="text-sm">
+                {% if a.moved_by %}{{ a.moved_by }}{% else %}—{% endif %}
+                /
+                {% if a.seconded_by %}{{ a.seconded_by }}{% else %}—{% endif %}
+            </td>
+            <td class="text-sm text-muted">{{ a.reason or '—' }}</td>
+            <td>
+                <form method="POST" action="/meeting/{{ meeting.id }}/unstage/{{ a.canonical_id }}" style="display: inline;">
+                    <button type="submit" class="btn btn-xs" title="Edit this action">Edit</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="send-bar">
+    <div>
+        <strong style="color: var(--text-bright);">{{ staged_actions|length }} actions</strong>
+        <span class="text-muted"> ready to send to secretariat</span>
+    </div>
+    <div class="btn-group">
+        <a href="/meeting/{{ meeting.id }}/portal" class="btn">Back to Edit</a>
+        {% if has_modifications %}
+        <a href="/meeting/{{ meeting.id }}/export-modifications" class="btn btn-mods">Export Modifications</a>
+        {% endif %}
+        <a href="/meeting/{{ meeting.id }}/export-circform" class="btn">Download Circ Form</a>
+        <form method="POST" action="/meeting/{{ meeting.id }}/send">
+            <button type="submit" class="btn btn-success btn-lg"
+                    onclick="return confirm('Send all {{ staged_actions|length }} actions to the secretariat? This will commit the data to the official record.')">
+                Send to Secretariat
+            </button>
+        </form>
+    </div>
+</div>
+
+<style>
+.breadcrumb { margin-bottom: 1rem; font-size: 0.9rem; }
+.breadcrumb a { color: var(--icc-light); }
+.breadcrumb .bc-sep { color: var(--text-muted); margin: 0 0.5rem; }
+.btn-group { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
+.btn-mods { background: #7B1FA2; color: white; border-color: #7B1FA2; }
+.btn-mods:hover { background: #9C27B0; color: white; }
+.btn-xs { font-size: 0.7rem; padding: 0.15rem 0.4rem; }
+.text-sm { font-size: 0.85rem; }
+.text-muted { color: var(--text-muted); }
+</style>
+{% endblock %}

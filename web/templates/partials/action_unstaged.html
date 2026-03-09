@@ -1,0 +1,133 @@
+<div class="action-card" id="card-{{ canonical_id }}" data-index="0">
+    <div class="action-card-header" onclick="expandCard('card-{{ canonical_id }}')">
+        <div>
+            <span class="action-card-title">{{ canonical_id }}</span>
+            <span class="action-card-meta">
+                {{ code_section or '' }}
+                {% if proponent %} &bull; {{ proponent }}{% endif %}
+            </span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+            {% if cdpaccess_url %}
+            <a href="{{ cdpaccess_url }}" target="_blank" class="text-sm" onclick="event.stopPropagation();">cdpACCESS &rarr;</a>
+            {% endif %}
+            <span class="expand-indicator">&#x25BC;</span>
+        </div>
+    </div>
+
+    <div class="action-card-body">
+        <form hx-post="/meeting/{{ meeting_id }}/stage"
+              hx-target="#card-{{ canonical_id }}"
+              hx-swap="outerHTML"
+              class="action-form">
+            <input type="hidden" name="canonical_id" value="{{ canonical_id }}">
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Recommendation</label>
+                    <select name="recommendation" class="form-select" required
+                            onchange="toggleMod(this);">
+                        <option value="">Select...</option>
+                        {% for rec in recommendations %}
+                        <option value="{{ rec }}" {% if prev_recommendation == rec %}selected{% endif %}>{{ rec }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Vote For</label>
+                    <input type="number" name="vote_for" class="form-input vote-input" min="0" placeholder="0"
+                           value="{{ prev_vote_for if prev_vote_for is not none else '' }}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Vote Against</label>
+                    <input type="number" name="vote_against" class="form-input vote-input" min="0" placeholder="0"
+                           value="{{ prev_vote_against if prev_vote_against is not none else '' }}">
+                </div>
+            </div>
+
+            <div class="form-row" style="grid-template-columns: 1fr auto 1fr 1fr;">
+                <div class="form-group">
+                    <label class="form-label">Not Voting</label>
+                    <input type="number" name="vote_not_voting" class="form-input vote-input" min="0" placeholder="0"
+                           value="{{ prev_vote_not_voting if prev_vote_not_voting is not none else '' }}">
+                </div>
+                <div class="form-group" style="display: flex; align-items: flex-end;">
+                    <button type="button" class="btn btn-sm" onclick="fillUnanimous(this)" title="Set all votes For, 0 Against, 0 Not Voting">
+                        Unanimous
+                    </button>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Moved By</label>
+                    <select name="moved_by" class="form-select">
+                        <option value="">Select...</option>
+                        {% for m in members %}
+                        <option value="{{ m.display_name }}" {% if prev_moved_by == m.display_name %}selected{% endif %}>{{ m.display_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Seconded By</label>
+                    <select name="seconded_by" class="form-select">
+                        <option value="">Select...</option>
+                        {% for m in members %}
+                        <option value="{{ m.display_name }}" {% if prev_seconded_by == m.display_name %}selected{% endif %}>{{ m.display_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Reason Statement</label>
+                    <textarea name="reason" class="form-textarea" rows="2" placeholder="Committee reason...">{{ prev_reason or '' }}</textarea>
+                </div>
+            </div>
+
+            <div class="form-group mod-group" style="display: {{ 'block' if prev_recommendation and 'Modified' in prev_recommendation else 'none' }};">
+                <label class="form-label">Modification Text <span class="text-muted text-xs">(use toolbar for <u>underline</u> = additions, <s>strikethrough</s> = deletions)</span></label>
+                <input type="hidden" name="modification_text" class="mod-hidden-input" value="{{ prev_modification_text or '' }}">
+                <div class="quill-editor" style="min-height: 120px;">{{ (prev_modification_text or '')|safe }}</div>
+            </div>
+
+            <script>
+            // Auto-init Quill for this partial (loaded via HTMX swap)
+            (function() {
+                var form = document.getElementById('card-{{ canonical_id }}').querySelector('form');
+                if (form && form.querySelector('.mod-group').style.display !== 'none') {
+                    setTimeout(function() { initQuillInForm(form); }, 50);
+                }
+            })();
+            </script>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">
+                    <span class="htmx-indicator">Saving...</span>
+                    <span class="htmx-content">Save Action</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- OOB: Update the progress bar and text -->
+<div id="progress-text" hx-swap-oob="innerHTML">{{ done_count }} / {{ total }} actions recorded</div>
+<div id="progress-fill-wrapper" hx-swap-oob="innerHTML">
+    <div class="progress-fill" style="width: {{ ((done_count / total * 100) if total > 0 else 0)|round(0)|int }}%;"></div>
+</div>
+
+<!-- OOB: Update the finalize bar -->
+<div id="finalize-bar" hx-swap-oob="innerHTML">
+{% if done_count > 0 %}
+<div class="send-bar">
+    <div>
+        <strong style="color: var(--text-bright);">{{ done_count }} of {{ total }} actions recorded</strong>
+        {% if done_count < total %}
+        <span class="text-warning text-sm" style="margin-left: 0.75rem;">{{ total - done_count }} remaining</span>
+        {% endif %}
+    </div>
+    <a href="/meeting/{{ meeting_id }}/review" class="btn btn-success btn-lg">
+        Review &amp; Send to Secretariat &rarr;
+    </a>
+</div>
+{% endif %}
+</div>

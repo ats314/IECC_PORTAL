@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% set active = "meetings" %}
+{% block title %}{{ meeting.body }} — {{ meeting.meeting_date }}{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 1rem;">
+    <a href="/meetings" style="font-size: 0.9rem;">&larr; Back to Meetings</a>
+</div>
+
+<div class="card" style="border-left: 4px solid var(--icc-light);">
+    <h1 style="color: var(--text-bright); font-size: 1.3rem;">{{ meeting.body }}</h1>
+    <p style="color: var(--text-muted);">
+        {{ meeting.meeting_date }}{% if meeting.meeting_time %} at {{ meeting.meeting_time }}{% endif %}
+        &bull; <span class="badge badge-{{ meeting.track }}">{{ meeting.track|title }}</span>
+        &bull; {{ meeting.phase }}
+        &bull;
+        {% if meeting.status == 'COMPLETED' %}<span class="badge badge-decided">Completed</span>
+        {% else %}<span class="badge badge-pending">Scheduled</span>{% endif %}
+    </p>
+    {% if meeting.notes %}
+    <p style="margin-top: 0.5rem; font-size: 0.9rem;">{{ meeting.notes }}</p>
+    {% endif %}
+
+    {% if meeting.status == 'SCHEDULED' %}
+    <a href="/meeting/{{ meeting.id }}/portal" class="btn btn-primary" style="margin-top: 1rem;">
+        Open Meeting Portal
+    </a>
+    {% endif %}
+</div>
+
+<div class="card">
+    <div class="card-header">Pending Proposals for {{ meeting.body }} ({{ proposals|length }})</div>
+    {% if proposals %}
+    <table class="data-table">
+        <thead><tr><th>ID</th><th>Proponent</th><th>Code Section</th><th>Status</th></tr></thead>
+        <tbody>
+        {% for p in proposals %}
+        <tr>
+            <td><a href="/proposals/{{ p.canonical_id }}">{{ p.canonical_id }}</a></td>
+            <td>{{ p.proponent or '—' }}</td>
+            <td>{{ p.code_section or '—' }}</td>
+            <td><span class="badge badge-pending">Pending</span></td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p style="color: var(--text-muted);">No pending proposals for this subgroup.</p>
+    {% endif %}
+</div>
+{% endblock %}

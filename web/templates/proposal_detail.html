@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+{% set active = "proposals" %}
+{% block title %}{{ proposal.canonical_id }} — ICC Code Development Platform{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 1rem;">
+    <a href="/proposals" style="font-size: 0.9rem;">&larr; Back to Proposals</a>
+</div>
+
+<!-- Proposal Header -->
+<div class="card" style="border-left: 4px solid var(--icc-light);">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+        <div>
+            <h1 style="color: var(--text-bright); font-size: 1.5rem;">{{ proposal.canonical_id }}</h1>
+            <p style="color: var(--text-muted); margin-top: 0.25rem;">
+                <span class="badge badge-{{ proposal.track }}">{{ proposal.track|title }}</span>
+                {% if proposal.status == 'Decided' %}<span class="badge badge-decided">Decided</span>
+                {% elif proposal.status == 'Pending' %}<span class="badge badge-pending">Pending</span>
+                {% elif proposal.status == 'Withdrawn' %}<span class="badge badge-withdrawn">Withdrawn</span>
+                {% else %}<span class="badge badge-closed">{{ proposal.status }}</span>{% endif %}
+            </p>
+        </div>
+        {% if proposal.cdpaccess_url %}
+        <a href="{{ proposal.cdpaccess_url }}" target="_blank" class="btn btn-primary" style="font-size: 0.85rem;">
+            View in cdpACCESS &rarr;
+        </a>
+        {% endif %}
+    </div>
+
+    <div class="grid-3" style="margin-top: 1rem;">
+        <div>
+            <div class="form-label">Proponent</div>
+            <div>{{ proposal.proponent or '—' }}</div>
+        </div>
+        <div>
+            <div class="form-label">Code Section</div>
+            <div>{{ proposal.code_section or '—' }}</div>
+        </div>
+        <div>
+            <div class="form-label">Subgroup</div>
+            <div>{{ proposal.current_subgroup or '—' }}</div>
+        </div>
+        <div>
+            <div class="form-label">Phase</div>
+            <div>{{ proposal.phase }}</div>
+        </div>
+        <div>
+            <div class="form-label">Prefix</div>
+            <div>{{ proposal.prefix }}</div>
+        </div>
+        <div>
+            <div class="form-label">Final Recommendation</div>
+            <div style="font-weight: 600;">{{ proposal.ca_recommendation or '—' }}</div>
+        </div>
+    </div>
+</div>
+
+<!-- Action Timeline -->
+<div class="grid-2">
+    <!-- Subgroup Actions -->
+    <div class="card">
+        <div class="card-header">Subgroup Actions ({{ sg_actions|length }})</div>
+        {% if sg_actions %}
+        <div class="timeline">
+            {% for a in sg_actions %}
+            <div class="timeline-item">
+                <div class="timeline-date">{{ a.action_date }} — {{ a.subgroup }}</div>
+                <div class="timeline-body">
+                    <strong>{{ a.recommendation }}</strong>
+                    {% if a.vote_for is not none %}
+                    <span style="color: var(--text-muted); font-size: 0.85rem;">
+                        ({{ a.vote_for }}-{{ a.vote_against }}-{{ a.vote_not_voting or 0 }})
+                    </span>
+                    {% endif %}
+                    {% if a.reason %}
+                    <p style="margin-top: 0.3rem; font-size: 0.9rem; color: var(--text-muted);">{{ a.reason }}</p>
+                    {% endif %}
+                    {% if a.modification_text %}
+                    <div class="mod-rich" style="margin-top: 0.3rem; background: var(--bg-input); padding: 0.5rem; border-radius: 4px; font-family: monospace; font-size: 0.85rem;">{{ a.modification_text|safe }}</div>
+                    {% endif %}
+                </div>
+                <div class="timeline-source">Source: {{ a.source_file or 'Unknown' }}</div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p style="color: var(--text-muted);">No subgroup actions recorded.</p>
+        {% endif %}
+    </div>
+
+    <!-- Consensus Actions -->
+    <div class="card">
+        <div class="card-header">Consensus Actions ({{ ca_actions|length }})</div>
+        {% if ca_actions %}
+        <div class="timeline">
+            {% for a in ca_actions %}
+            <div class="timeline-item">
+                <div class="timeline-date">
+                    {{ a.action_date }}
+                    {% if a.is_final %}<span class="badge badge-decided" style="margin-left: 0.5rem;">FINAL</span>{% endif %}
+                </div>
+                <div class="timeline-body">
+                    <strong>{{ a.recommendation }}</strong>
+                    {% if a.vote_for is not none %}
+                    <span style="color: var(--text-muted); font-size: 0.85rem;">
+                        ({{ a.vote_for }}-{{ a.vote_against }}-{{ a.vote_not_voting or 0 }})
+                    </span>
+                    {% endif %}
+                    {% if a.moved_by %}
+                    <p style="font-size: 0.85rem; color: var(--text-muted);">Moved by {{ a.moved_by }}{% if a.seconded_by %}, seconded by {{ a.seconded_by }}{% endif %}</p>
+                    {% endif %}
+                    {% if a.reason %}
+                    <p style="margin-top: 0.3rem; font-size: 0.9rem; color: var(--text-muted);">{{ a.reason }}</p>
+                    {% endif %}
+                    {% if a.modification_text %}
+                    <div class="mod-rich" style="margin-top: 0.3rem; background: var(--bg-input); padding: 0.5rem; border-radius: 4px; font-family: monospace; font-size: 0.85rem;">{{ a.modification_text|safe }}</div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p style="color: var(--text-muted);">No consensus actions recorded.</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Data Quality Flags -->
+{% if dq_flags %}
+<div class="card" style="margin-top: 1rem;">
+    <div class="card-header">Data Quality Flags ({{ dq_flags|length }})</div>
+    <table class="data-table">
+        <thead><tr><th>Flag</th><th>Details</th><th>Status</th></tr></thead>
+        <tbody>
+        {% for f in dq_flags %}
+        <tr>
+            <td>{{ f.flag_type }}</td>
+            <td style="font-size: 0.85rem; color: var(--text-muted);">{{ f.details or '—' }}</td>
+            <td>
+                {% if f.needs_review %}<span class="badge badge-pending">Open</span>
+                {% else %}<span class="badge badge-decided">Resolved</span>{% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+{% endblock %}

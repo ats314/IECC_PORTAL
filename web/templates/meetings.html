@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+{% set active = "meetings" %}
+{% block title %}Meetings — ICC Code Development Platform{% endblock %}
+
+{% block content %}
+<div class="section-header">
+    <h1 style="color: var(--text-bright);">Meetings</h1>
+    <button class="btn btn-primary" onclick="document.getElementById('create-meeting-form').style.display = document.getElementById('create-meeting-form').style.display === 'none' ? 'block' : 'none';">
+        + New Meeting
+    </button>
+</div>
+
+<!-- Create Meeting Form (hidden by default) -->
+<div id="create-meeting-form" class="card" style="display: none; margin-bottom: 1.5rem; border-left: 3px solid var(--icc-light);">
+    <div class="card-header">Schedule New Meeting</div>
+    <form method="POST" action="/meetings/create" onsubmit="return validateMeetingForm()">
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Track</label>
+                <select name="track" class="form-select" required id="new-meeting-track"
+                        onchange="updateBodyOptions()">
+                    <option value="">Select track...</option>
+                    <option value="commercial">Commercial</option>
+                    <option value="residential">Residential</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Body (Subgroup / Committee)</label>
+                <select name="body" class="form-select" required id="new-meeting-body">
+                    <option value="">Select track first...</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Phase</label>
+                <select name="phase" class="form-select" required>
+                    <option value="CODE_PROPOSAL">Code Proposal</option>
+                    <option value="PUBLIC_COMMENT">Public Comment</option>
+                    <option value="PUBLIC_INPUT">Public Input</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Meeting Date</label>
+                <input type="date" name="meeting_date" class="form-input" required id="new-meeting-date">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Meeting Time (optional)</label>
+                <input type="time" name="meeting_time" class="form-input">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Notes (optional)</label>
+                <input type="text" name="notes" class="form-input" placeholder="e.g., Teams link, room number...">
+            </div>
+        </div>
+        <div id="meeting-form-error" style="display: none; color: var(--danger); font-size: 0.85rem; margin-bottom: 0.75rem;"></div>
+        <button type="submit" class="btn btn-success">Create Meeting</button>
+        <button type="button" class="btn" style="margin-left: 0.5rem;"
+                onclick="document.getElementById('create-meeting-form').style.display='none'">Cancel</button>
+    </form>
+</div>
+
+<!-- Filter -->
+<div class="filter-bar">
+    <a href="/meetings" class="btn {% if not track_filter %}btn-primary{% endif %}">All</a>
+    <a href="/meetings?track=commercial" class="btn {% if track_filter == 'commercial' %}btn-primary{% endif %}">Commercial</a>
+    <a href="/meetings?track=residential" class="btn {% if track_filter == 'residential' %}btn-primary{% endif %}">Residential</a>
+    <span class="text-muted text-sm" style="margin-left: auto;">{{ meetings|length }} meetings</span>
+</div>
+
+<table class="data-table">
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Time</th>
+            <th>Body</th>
+            <th>Track</th>
+            <th>Phase</th>
+            <th>Status</th>
+            <th>Actions</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for m in meetings %}
+    <tr>
+        <td>{{ m.meeting_date }}</td>
+        <td>{{ m.meeting_time|format_time or '—' }}</td>
+        <td>
+            <a href="/meetings/{{ m.id }}">{{ m.body }}</a>
+            {% if m.notes %}
+            <span class="notes-tooltip" title="{{ m.notes }}">&#x1F4DD;</span>
+            {% endif %}
+        </td>
+        <td><span class="badge badge-{{ m.track }}">{{ m.track[:3]|upper }}</span></td>
+        <td class="text-sm text-muted">{{ m.phase|replace('_', ' ')|title }}</td>
+        <td>
+            {% if m.status == 'COMPLETED' %}<span class="badge badge-decided">Completed</span>
+            {% elif m.status == 'SCHEDULED' %}<span class="badge badge-pending">Scheduled</span>
+            {% else %}<span class="badge badge-closed">{{ m.status }}</span>{% endif %}
+        </td>
+        <td>{{ m.action_count or 0 }}</td>
+        <td style="white-space: nowrap;">
+            <div class="btn-group">
+            {% if m.status == 'SCHEDULED' %}
+            <a href="/meeting/{{ m.id }}/portal" class="btn btn-primary btn-sm">Open Portal</a>
+            <form method="POST" action="/meetings/{{ m.id }}/delete" style="display: inline;"
+                  onsubmit="return confirm('Delete this meeting? This cannot be undone.')">
+                <button type="submit" class="btn btn-danger btn-xs">&times;</button>
+            </form>
+            {% elif m.status == 'COMPLETED' %}
+            <a href="/meeting/{{ m.id }}/portal" class="btn btn-sm">View Results</a>
+            <a href="/meeting/{{ m.id }}/export-circform" class="btn btn-sm">Circ Form</a>
+            <a href="/meeting/{{ m.id }}/export-modifications" class="btn btn-mods btn-sm">Mods</a>
+            {% endif %}
+            </div>
+        </td>
+    </tr>
+    {% endfor %}
+    {% if not meetings %}
+    <tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 2rem;">No meetings found.</td></tr>
+    {% endif %}
+    </tbody>
+</table>
+
+<script>
+const bodies = {
+    commercial: {{ commercial_bodies | tojson }},
+    residential: {{ residential_bodies | tojson }}
+};
+function updateBodyOptions() {
+    const track = document.getElementById('new-meeting-track').value;
+    const body = document.getElementById('new-meeting-body');
+    body.innerHTML = '';
+    if (!track) {
+        body.innerHTML = '<option value="">Select track first...</option>';
+        return;
+    }
+    body.innerHTML = '<option value="">Select body...</option>';
+    (bodies[track] || []).forEach(function(b) {
+        body.innerHTML += '<option value="' + b + '">' + b + '</option>';
+    });
+}
+function validateMeetingForm() {
+    const errDiv = document.getElementById('meeting-form-error');
+    const track = document.getElementById('new-meeting-track').value;
+    const body = document.getElementById('new-meeting-body').value;
+    const date = document.getElementById('new-meeting-date').value;
+
+    if (!track) { errDiv.textContent = 'Please select a track.'; errDiv.style.display = 'block'; return false; }
+    if (!body) { errDiv.textContent = 'Please select a body/subgroup.'; errDiv.style.display = 'block'; return false; }
+    if (!date) { errDiv.textContent = 'Please enter a meeting date.'; errDiv.style.display = 'block'; return false; }
+
+    errDiv.style.display = 'none';
+    return true;
+}
+</script>
+
+<style>
+.btn-group { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+.btn-mods { background: #7B1FA2; color: white; border-color: #7B1FA2; }
+.btn-mods:hover { background: #9C27B0; color: white; }
+.btn-xs { font-size: 0.7rem; padding: 0.15rem 0.4rem; }
+.btn-sm { font-size: 0.8rem; padding: 0.3rem 0.75rem; }
+.text-sm { font-size: 0.85rem; }
+.text-muted { color: var(--text-muted); }
+.notes-tooltip {
+    cursor: help;
+    font-size: 0.8rem;
+    margin-left: 0.3rem;
+    opacity: 0.6;
+}
+.notes-tooltip:hover { opacity: 1; }
+</style>
+{% endblock %}

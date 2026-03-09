@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+{% set active = "dashboard" %}
+{% block title %}Dashboard — ICC Code Development Platform{% endblock %}
+
+{% block content %}
+<h1 style="margin-bottom: 1.5rem; color: var(--text-bright);">Secretariat Dashboard</h1>
+
+<!-- Summary Cards -->
+<div class="grid-4">
+{% for track_name in ['commercial', 'residential'] %}
+{% set c = counts.get(track_name, {}) %}
+    <a href="/proposals?track={{ track_name }}" class="card" style="text-decoration: none;">
+        <div class="card-header">{{ track_name|title }} — Total</div>
+        <div class="card-value">{{ c.get('total', 0) }}</div>
+        <div class="card-label">proposals</div>
+    </a>
+    <a href="/proposals?track={{ track_name }}&status=Decided" class="card" style="text-decoration: none;">
+        <div class="card-header">{{ track_name|title }} — Decided</div>
+        <div class="card-value" style="color: var(--success);">{{ c.get('decided', 0) }}</div>
+        <div class="card-label">
+            {% if c.get('total', 0) > 0 %}
+            {{ ((c.get('decided', 0) / c.get('total', 1)) * 100)|round(0)|int }}%
+            {% endif %}
+        </div>
+    </a>
+{% endfor %}
+</div>
+
+<!-- In-Progress Meetings (subgroups currently meeting) -->
+{% if in_progress_meetings %}
+<div class="card" style="margin-top: 1rem; border-left: 3px solid var(--warning);">
+    <div class="section-header">
+        <h2 style="color: var(--warning);">In-Progress Meetings</h2>
+    </div>
+    <table class="data-table">
+        <thead><tr><th>Body</th><th>Track</th><th>Date</th><th>Progress</th><th></th></tr></thead>
+        <tbody>
+        {% for m in in_progress_meetings %}
+        <tr>
+            <td><a href="/meetings/{{ m.id }}">{{ m.body }}</a></td>
+            <td><span class="badge badge-{{ m.track }}">{{ m.track[:3]|upper }}</span></td>
+            <td>{{ m.meeting_date }}</td>
+            <td>
+                <span style="font-weight: 600; color: var(--warning);">{{ m.staged_count }}/{{ m.agenda_count }}</span>
+                <span class="text-muted text-sm"> actions</span>
+            </td>
+            <td><a href="/meeting/{{ m.id }}/portal" class="btn btn-primary btn-xs">Portal</a></td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<!-- Pending Circ Forms for Review -->
+{% if pending_circforms %}
+<div class="card" style="margin-top: 1rem; border-left: 3px solid var(--accent);">
+    <div class="section-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <h2 style="color: var(--accent);">Pending Circ Forms ({{ pending_circforms|length }})</h2>
+        <a href="/circ-forms" class="btn btn-sm">View All</a>
+    </div>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Meeting Date</th>
+                <th>Subgroup</th>
+                <th>Track</th>
+                <th>Actions</th>
+                <th>Generated</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for cf in pending_circforms %}
+        <tr id="circform-{{ cf.id }}">
+            <td>{{ cf.meeting_date }}</td>
+            <td>{{ cf.subgroup }}</td>
+            <td><span class="badge badge-{{ cf.track }}">{{ cf.track[:3]|upper }}</span></td>
+            <td>{{ cf.action_count or 0 }}</td>
+            <td class="text-muted text-sm">{{ cf.generated_at[:16] }}</td>
+            <td style="white-space: nowrap;">
+                <a href="/circ-forms/{{ cf.id }}/preview" target="_blank" class="btn btn-sm">Preview</a>
+                <button class="btn btn-primary btn-sm"
+                    hx-post="/circ-forms/{{ cf.id }}/approve"
+                    hx-target="#circform-{{ cf.id }}"
+                    hx-swap="outerHTML"
+                    hx-confirm="Approve this circ form{% if sp_enabled %} and upload to SharePoint{% endif %}?">
+                    {% if sp_enabled %}Approve &amp; Upload{% else %}Approve{% endif %}
+                </button>
+                <button class="btn btn-sm btn-danger"
+                    hx-post="/circ-forms/{{ cf.id }}/reject"
+                    hx-target="#circform-{{ cf.id }}"
+                    hx-swap="outerHTML"
+                    hx-confirm="Reject this circ form?">
+                    Reject
+                </button>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<div class="grid-2" style="margin-top: 1rem;">
+    <!-- Pending by Subgroup -->
+    <div class="card">
+        <div class="card-header">Pending Proposals by Subgroup</div>
+        {% for track_name in ['commercial', 'residential'] %}
+        <h3 style="color: var(--icc-light); font-size: 0.9rem; margin: 0.75rem 0 0.5rem;">{{ track_name|title }}</h3>
+        {% if pending_by_subgroup.get(track_name) %}
+        <table class="data-table">
+            <thead><tr><th>Subgroup</th><th>Count</th></tr></thead>
+            <tbody>
+            {% for sg in pending_by_subgroup.get(track_name, []) %}
+            <tr>
+                <td><a href="/proposals?track={{ track_name }}&subgroup={{ sg.current_subgroup|urlencode }}&status=Pending">{{ sg.current_subgroup or 'Unassigned' }}</a></td>
+                <td><a href="/proposals?track={{ track_name }}&subgroup={{ sg.current_subgroup|urlencode }}&status=Pending"><span class="badge badge-pending">{{ sg.count }}</span></a></td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="text-muted" style="font-size: 0.9rem;">No pending proposals</p>
+        {% endif %}
+        {% endfor %}
+    </div>
+
+    <!-- Upcoming Meetings -->
+    <div class="card">
+        <div class="card-header">Upcoming Meetings</div>
+        {% if upcoming_meetings %}
+        <table class="data-table">
+            <thead><tr><th>Date</th><th>Body</th><th>Track</th><th></th></tr></thead>
+            <tbody>
+            {% for m in upcoming_meetings[:10] %}
+            <tr>
+                <td>{{ m.meeting_date }}</td>
+                <td><a href="/meetings/{{ m.id }}">{{ m.body }}</a></td>
+                <td><span class="badge badge-{{ m.track }}">{{ m.track[:3]|upper }}</span></td>
+                <td><a href="/meeting/{{ m.id }}/portal" class="btn btn-primary btn-xs">Portal</a></td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="text-muted" style="font-size: 0.9rem;">No upcoming meetings scheduled</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Open Data Quality Flags -->
+<div class="card" style="margin-top: 1rem;">
+    <div class="section-header">
+        <h2>Open Data Quality Flags ({{ open_flags|length }})</h2>
+    </div>
+    {% if open_flags %}
+    <table class="data-table">
+        <thead>
+            <tr><th>Proposal</th><th>Track</th><th>Flag</th><th>Details</th></tr>
+        </thead>
+        <tbody>
+        {% for f in open_flags[:20] %}
+        <tr>
+            <td><a href="/proposals/{{ f.canonical_id }}">{{ f.canonical_id }}</a></td>
+            <td><span class="badge badge-{{ f.track }}">{{ f.track[:3]|upper }}</span></td>
+            <td>{{ f.flag_type }}</td>
+            <td class="text-muted text-sm">{{ f.details or '' }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p style="color: var(--success);">No open flags — all clear.</p>
+    {% endif %}
+</div>
+
+<!-- Recent Subgroup Actions -->
+<div class="card" style="margin-top: 1rem;">
+    <div class="card-header">Recent Subgroup Actions</div>
+    {% if recent_actions %}
+    <table class="data-table">
+        <thead><tr><th>Proposal</th><th>Track</th><th>Date</th><th>Recommendation</th><th>Vote (F-A-NV)</th></tr></thead>
+        <tbody>
+        {% for a in recent_actions[:10] %}
+        <tr>
+            <td><a href="/proposals/{{ a.canonical_id }}">{{ a.canonical_id }}</a></td>
+            <td><span class="badge badge-{{ a.track }}">{{ a.track[:3]|upper }}</span></td>
+            <td>{{ a.action_date }}</td>
+            <td>{{ a.recommendation }}</td>
+            <td class="text-muted text-sm">
+                {% if a.vote_for is not none %}
+                {{ a.vote_for }}-{{ a.vote_against }}-{{ a.vote_not_voting or 0 }}
+                {% else %}—{% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="text-muted" style="font-size: 0.9rem;">No recent actions</p>
+    {% endif %}
+</div>
+
+<style>
+.btn-xs { font-size: 0.7rem; padding: 0.15rem 0.4rem; }
+.text-sm { font-size: 0.85rem; }
+.text-muted { color: var(--text-muted); }
+</style>
+{% endblock %}

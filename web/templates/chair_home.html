@@ -1,0 +1,126 @@
+{% extends "chair_base.html" %}
+{% set active = "home" %}
+{% block title %}My Meetings — ICC Code Development Platform{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 2rem;">
+    <h1 style="color: var(--text-bright); margin-bottom: 0.25rem;">Welcome, {{ user.name }}</h1>
+    <p class="text-muted">{{ user.title }}</p>
+</div>
+
+<!-- Quick Stats -->
+<div class="grid-3" style="margin-bottom: 1.5rem;">
+    <div class="card">
+        <div class="card-header">My Subgroup</div>
+        <div style="font-size: 1.1rem; font-weight: 600; color: var(--text-bright); margin-top: 0.25rem;">{{ user.body }}</div>
+        <div style="margin-top: 0.25rem;"><span class="badge badge-{{ user.track }}">{{ user.track|title }}</span></div>
+    </div>
+    <div class="card">
+        <div class="card-header">Scheduled Meetings</div>
+        <div class="card-value">{{ meetings|selectattr('status', 'equalto', 'SCHEDULED')|list|length }}</div>
+        <div class="card-label">upcoming</div>
+    </div>
+    <div class="card">
+        <div class="card-header">Pending Proposals</div>
+        <div class="card-value" style="color: var(--warning);">{{ pending_count }}</div>
+        <div class="card-label">awaiting action</div>
+    </div>
+</div>
+
+<!-- Upcoming Meetings (sorted nearest first) -->
+{% set scheduled = meetings|selectattr('status', 'equalto', 'SCHEDULED')|list|sort(attribute='meeting_date') %}
+{% if scheduled %}
+<div class="card">
+    <div class="card-header">Upcoming Meetings</div>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Phase</th>
+                <th>Agenda</th>
+                <th>Progress</th>
+                <th>Notes</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for m in scheduled %}
+        <tr>
+            <td style="font-weight: 600; color: var(--text-bright);">{{ m.meeting_date }}</td>
+            <td>{{ m.meeting_time|format_time or '—' }}</td>
+            <td class="text-sm text-muted">{{ m.phase|replace('_', ' ')|title }}</td>
+            <td>
+                {% if m.agenda_count > 0 %}
+                <span class="badge badge-decided">{{ m.agenda_count }} items</span>
+                {% else %}
+                <span class="text-muted text-sm">No agenda</span>
+                {% endif %}
+            </td>
+            <td>
+                {% if m.agenda_count > 0 %}
+                    {% if m.staged_count == m.agenda_count %}
+                    <span style="color: var(--success); font-weight: 600;">{{ m.staged_count }}/{{ m.agenda_count }}</span>
+                    {% elif m.staged_count > 0 %}
+                    <span style="color: var(--warning); font-weight: 600;">{{ m.staged_count }}/{{ m.agenda_count }}</span>
+                    {% else %}
+                    <span class="text-muted">0/{{ m.agenda_count }}</span>
+                    {% endif %}
+                {% else %}
+                <span class="text-muted">—</span>
+                {% endif %}
+            </td>
+            <td class="text-sm text-muted">{{ m.notes or '' }}</td>
+            <td>
+                <a href="/meeting/{{ m.id }}/portal" class="btn btn-primary" style="font-size: 0.85rem; padding: 0.4rem 1rem;">
+                    Open Portal
+                </a>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<!-- Completed Meetings (most recent first) -->
+{% set completed = meetings|selectattr('status', 'equalto', 'COMPLETED')|list|sort(attribute='meeting_date', reverse=true) %}
+{% if completed %}
+<div class="card" style="margin-top: 1rem;">
+    <div class="card-header">Completed Meetings</div>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Phase</th>
+                <th>Actions</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for m in completed %}
+        <tr>
+            <td style="color: var(--text-bright);">{{ m.meeting_date }}</td>
+            <td class="text-sm text-muted">{{ m.phase|replace('_', ' ')|title }}</td>
+            <td>{{ m.action_count or 0 }}</td>
+            <td style="white-space: nowrap;">
+                <div class="btn-group">
+                    <a href="/meeting/{{ m.id }}/portal" class="btn btn-sm">View Results</a>
+                    <a href="/meeting/{{ m.id }}/export-circform" class="btn btn-sm">Circ Form</a>
+                    <a href="/meeting/{{ m.id }}/export-modifications" class="btn btn-mods btn-sm">Mods</a>
+                </div>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+{% if not meetings %}
+<div class="card" style="text-align: center; padding: 3rem;">
+    <p class="text-muted" style="font-size: 1.1rem;">No meetings scheduled yet for {{ user.body }}.</p>
+    <p class="text-muted" style="font-size: 0.9rem; margin-top: 0.5rem;">Contact the Secretariat to schedule a meeting.</p>
+</div>
+{% endif %}
+{% endblock %}

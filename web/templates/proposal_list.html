@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% set active = "proposals" %}
+{% block title %}Proposals — ICC Code Development Platform{% endblock %}
+
+{% block content %}
+<h1 style="margin-bottom: 1rem; color: var(--text-bright);">Proposals</h1>
+
+<!-- Filter Bar -->
+<form class="filter-bar" id="proposal-filter-form" hx-get="/proposals" hx-target="#proposal-table" hx-swap="innerHTML" hx-push-url="true">
+    <select name="track" class="form-select" onchange="this.form.requestSubmit()">
+        <option value="">All Tracks</option>
+        <option value="commercial" {% if filters.track == 'commercial' %}selected{% endif %}>Commercial</option>
+        <option value="residential" {% if filters.track == 'residential' %}selected{% endif %}>Residential</option>
+    </select>
+    <select name="subgroup" class="form-select" onchange="this.form.requestSubmit()">
+        <option value="">All Subgroups</option>
+        {% for sg in subgroups %}
+        <option value="{{ sg }}" {% if filters.subgroup == sg %}selected{% endif %}>{{ sg }}</option>
+        {% endfor %}
+    </select>
+    <select name="status" class="form-select" onchange="this.form.requestSubmit()">
+        <option value="">All Statuses</option>
+        <option value="Decided" {% if filters.status == 'Decided' %}selected{% endif %}>Decided</option>
+        <option value="Pending" {% if filters.status == 'Pending' %}selected{% endif %}>Pending</option>
+        <option value="Withdrawn" {% if filters.status == 'Withdrawn' %}selected{% endif %}>Withdrawn</option>
+        <option value="Phase Closed" {% if filters.status == 'Phase Closed' %}selected{% endif %}>Phase Closed</option>
+    </select>
+    <select name="phase" class="form-select" onchange="this.form.requestSubmit()">
+        <option value="">All Phases</option>
+        <option value="CODE_PROPOSAL" {% if filters.phase == 'CODE_PROPOSAL' %}selected{% endif %}>Code Proposal</option>
+        <option value="PUBLIC_COMMENT" {% if filters.phase == 'PUBLIC_COMMENT' %}selected{% endif %}>Public Comment</option>
+        <option value="PUBLIC_INPUT" {% if filters.phase == 'PUBLIC_INPUT' %}selected{% endif %}>Public Input</option>
+    </select>
+    <input type="text" name="q" class="form-input" placeholder="Search ID, proponent, section..."
+           value="{{ filters.q }}" style="min-width: 200px;" id="proposal-search-input">
+    <button type="submit" class="btn btn-primary">Filter</button>
+    <a href="/proposals" class="btn">Clear</a>
+    <span class="text-muted text-sm" style="margin-left: auto;">{{ proposals|length }} results</span>
+</form>
+
+<!-- Proposal Table -->
+<div id="proposal-table">
+{% include "partials/proposal_rows.html" %}
+</div>
+
+<script>
+// Live search with debounce on keyup
+(function() {
+    let timer;
+    const input = document.getElementById('proposal-search-input');
+    if (input) {
+        input.addEventListener('keyup', function() {
+            clearTimeout(timer);
+            timer = setTimeout(function() {
+                document.getElementById('proposal-filter-form').requestSubmit();
+            }, 350);
+        });
+    }
+})();
+</script>
+
+<style>
+.text-sm { font-size: 0.85rem; }
+.text-muted { color: var(--text-muted); }
+</style>
+{% endblock %}

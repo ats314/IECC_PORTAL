@@ -1,0 +1,8 @@
+<div class="alert alert-danger">
+    <strong>{{ canonical_id }}</strong> — Could not stage action:
+    <ul style="margin-top: 0.25rem; margin-left: 1.25rem;">
+    {% for e in errors %}
+        <li>{{ e }}</li>
+    {% endfor %}
+    </ul>
+</div>

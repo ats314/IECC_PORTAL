@@ -1,0 +1,55 @@
+<div class="action-card staged-action" id="card-{{ canonical_id }}">
+    <div class="action-card-header">
+        <div>
+            <span class="action-card-title">{{ canonical_id }}</span>
+            <span class="badge badge-decided" style="margin-left: 0.5rem;">STAGED</span>
+        </div>
+        <div class="action-summary">
+            <span class="rec">{{ recommendation }}</span>
+            {% if vote_for is not none %}
+            <span class="votes">{{ vote_for }}-{{ vote_against }}-{{ vote_not_voting or 0 }}</span>
+            {% endif %}
+            {% if moved_by %}
+            <span class="text-muted text-xs" style="margin-left: 0.5rem;">M: {{ moved_by }}{% if seconded_by %} / S: {{ seconded_by }}{% endif %}</span>
+            {% endif %}
+            <button type="button" class="btn btn-xs"
+                    hx-post="/meeting/{{ meeting_id }}/unstage/{{ canonical_id }}"
+                    hx-target="#card-{{ canonical_id }}"
+                    hx-swap="outerHTML"
+                    hx-confirm="Edit the action for {{ canonical_id }}?">
+                Edit
+            </button>
+        </div>
+    </div>
+    <div class="text-muted text-sm" style="margin-top: 0.25rem;">
+        Progress: {{ done_count }} / {{ total }} proposals
+    </div>
+</div>
+
+<!-- OOB: Update the progress bar and text in the portal header -->
+<div id="progress-text" hx-swap-oob="innerHTML">{{ done_count }} / {{ total }} actions recorded</div>
+<div id="progress-fill-wrapper" hx-swap-oob="innerHTML">
+    <div class="progress-fill" style="width: {{ ((done_count / total * 100) if total > 0 else 0)|round(0)|int }}%;"></div>
+</div>
+
+<!-- OOB: Update the finalize bar -->
+<div id="finalize-bar" hx-swap-oob="innerHTML">
+{% if done_count > 0 %}
+<div class="send-bar">
+    <div>
+        <strong style="color: var(--text-bright);">{{ done_count }} of {{ total }} actions recorded</strong>
+        {% if done_count < total %}
+        <span class="text-warning text-sm" style="margin-left: 0.75rem;">{{ total - done_count }} remaining</span>
+        {% endif %}
+        {% if has_modifications %}
+        <a href="/meeting/{{ meeting_id }}/export-modifications" class="btn btn-mods btn-sm" style="margin-left: 1rem;">
+            Export Modifications (Word)
+        </a>
+        {% endif %}
+    </div>
+    <a href="/meeting/{{ meeting_id }}/review" class="btn btn-success btn-lg">
+        Review &amp; Send to Secretariat &rarr;
+    </a>
+</div>
+{% endif %}
+</div>

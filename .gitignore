@@ -1,0 +1,71 @@
+# Database files
+iecc.db
+iecc.db-wal
+iecc.db-shm
+iecc.db-journal
+*.db-wal
+*.db-shm
+*.db-journal
+
+# Large data directories
+ARCHIVES/
+2027_RESIDENTIAL/
+2027_COMMERCIAL/
+IECC standard/
+Proposal_Text_Sources/
+Residential/
+ICC JSON FILES/
+remove this/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+venv/
+.venv/
+env/
+
+# Generated files
+web/generated/
+web/iecc.db
+web/iecc.db-journal
+web/iecc.db-wal
+
+# OneDrive / FUSE artifacts
+.fuse_hidden*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Claude agent working files
+.claude/
+
+# Skills update staging (local workflow only)
+skills-update/
+
+# Loose document files in root (source data, not code)
+*.docx
+*.xlsx
+*.pdf
+*.pptx
+
+# Snapshot data (iecc_snapshot.py output)
+.snapshots/
+
+# Temp / lock files
+*.tmp
+.~lock.*

@@ -1,0 +1,22 @@
+<tr id="circform-{{ form.id }}" style="opacity: 0.7;">
+    <td>{{ form.meeting_date }}</td>
+    <td>{{ form.subgroup }}</td>
+    <td><span class="badge badge-{{ form.track }}">{{ form.track[:3]|upper }}</span></td>
+    <td>{{ form.action_count or 0 }}</td>
+    <td class="text-muted text-sm">{{ form.generated_at[:16] if form.generated_at else '' }}</td>
+    <td style="white-space: nowrap;">
+        {% if form.status == 'approved' %}
+            <span class="badge" style="background: var(--success); color: #fff;">Approved</span>
+            <span class="text-muted text-sm">by {{ form.reviewed_by }}</span>
+        {% elif form.status == 'uploaded' %}
+            <span class="badge" style="background: var(--accent); color: #fff;">Uploaded to SharePoint</span>
+            {% if form.sharepoint_url %}
+                <a href="{{ form.sharepoint_url }}" target="_blank" class="btn btn-sm">View</a>
+            {% endif %}
+        {% elif form.status == 'rejected' %}
+            <span class="badge" style="background: var(--danger); color: #fff;">Rejected</span>
+            <span class="text-muted text-sm">by {{ form.reviewed_by }}{% if form.rejection_reason %}: {{ form.rejection_reason[:40] }}{% endif %}</span>
+        {% endif %}
+        <a href="/circ-forms/{{ form.id }}/download" class="btn btn-sm" style="margin-left: 0.5rem;">Download</a>
+    </td>
+</tr>

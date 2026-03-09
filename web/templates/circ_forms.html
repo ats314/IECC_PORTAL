@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% set active = "circ-forms" %}
+{% block title %}Circulation Forms — ICC Code Development Platform{% endblock %}
+
+{% block content %}
+<h1 style="margin-bottom: 1.5rem; color: var(--text-bright);">Circulation Forms</h1>
+
+<!-- Pending Review -->
+<div class="card" style="border-left: 3px solid var(--accent);">
+    <div class="card-header">Pending Review ({{ pending_forms|length }})</div>
+    {% if pending_forms %}
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Meeting Date</th>
+                <th>Subgroup</th>
+                <th>Body</th>
+                <th>Track</th>
+                <th>Actions</th>
+                <th>Generated</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for cf in pending_forms %}
+        <tr id="circform-{{ cf.id }}">
+            <td>{{ cf.meeting_date }}</td>
+            <td>{{ cf.subgroup }}</td>
+            <td class="text-muted text-sm">{{ cf.body }}</td>
+            <td><span class="badge badge-{{ cf.track }}">{{ cf.track[:3]|upper }}</span></td>
+            <td>{{ cf.action_count or 0 }}</td>
+            <td class="text-muted text-sm">{{ cf.generated_at[:16] }}</td>
+            <td style="white-space: nowrap;">
+                <a href="/circ-forms/{{ cf.id }}/preview" target="_blank" class="btn btn-sm">Preview</a>
+                <a href="/circ-forms/{{ cf.id }}/download" class="btn btn-sm">Download</a>
+                <button class="btn btn-primary btn-sm"
+                    hx-post="/circ-forms/{{ cf.id }}/approve"
+                    hx-target="#circform-{{ cf.id }}"
+                    hx-swap="outerHTML"
+                    hx-confirm="Approve this circ form{% if sp_enabled %} and upload to SharePoint{% endif %}?">
+                    {% if sp_enabled %}Approve &amp; Upload{% else %}Approve{% endif %}
+                </button>
+                <button class="btn btn-sm btn-danger"
+                    hx-post="/circ-forms/{{ cf.id }}/reject"
+                    hx-target="#circform-{{ cf.id }}"
+                    hx-swap="outerHTML"
+                    hx-confirm="Reject this circ form?">
+                    Reject
+                </button>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="text-muted" style="font-size: 0.9rem; padding: 0.5rem 0;">No circulation forms pending review.</p>
+    {% endif %}
+</div>
+
+<!-- Previously Reviewed -->
+<div class="card" style="margin-top: 1rem;">
+    <div class="card-header">Reviewed ({{ reviewed_forms|length }})</div>
+    {% if reviewed_forms %}
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Meeting Date</th>
+                <th>Subgroup</th>
+                <th>Track</th>
+                <th>Status</th>
+                <th>Reviewed By</th>
+                <th>Reviewed At</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for cf in reviewed_forms %}
+        <tr>
+            <td>{{ cf.meeting_date }}</td>
+            <td>{{ cf.subgroup }}</td>
+            <td><span class="badge badge-{{ cf.track }}">{{ cf.track[:3]|upper }}</span></td>
+            <td>
+                {% if cf.status == 'approved' %}
+                    <span class="badge" style="background: var(--success); color: #fff;">Approved</span>
+                {% elif cf.status == 'uploaded' %}
+                    <span class="badge" style="background: var(--accent); color: #fff;">Uploaded</span>
+                {% elif cf.status == 'rejected' %}
+                    <span class="badge" style="background: var(--danger); color: #fff;">Rejected</span>
+                {% else %}
+                    <span class="badge">{{ cf.status }}</span>
+                {% endif %}
+            </td>
+            <td class="text-muted text-sm">{{ cf.reviewed_by or '—' }}</td>
+            <td class="text-muted text-sm">{{ (cf.reviewed_at or '')[:16] }}</td>
+            <td style="white-space: nowrap;">
+                <a href="/circ-forms/{{ cf.id }}/preview" target="_blank" class="btn btn-sm">Preview</a>
+                <a href="/circ-forms/{{ cf.id }}/download" class="btn btn-sm">Download</a>
+                {% if cf.sharepoint_url %}
+                    <a href="{{ cf.sharepoint_url }}" target="_blank" class="btn btn-sm" style="color: var(--accent);">SharePoint</a>
+                {% endif %}
+                {% if cf.rejection_reason %}
+                    <span class="text-muted text-sm" title="{{ cf.rejection_reason }}">Reason: {{ cf.rejection_reason[:30] }}{% if cf.rejection_reason|length > 30 %}...{% endif %}</span>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="text-muted" style="font-size: 0.9rem; padding: 0.5rem 0;">No reviewed forms yet.</p>
+    {% endif %}
+</div>
+
+{% endblock %}
