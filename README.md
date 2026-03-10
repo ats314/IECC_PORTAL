@@ -4,8 +4,6 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-009688.svg)](https://fastapi.tiangolo.com)
 [![SQLite](https://img.shields.io/badge/SQLite-WAL_mode-003B57.svg)](https://sqlite.org)
 [![HTMX](https://img.shields.io/badge/HTMX-dynamic_UI-3366CC.svg)](https://htmx.org)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-
 A web-based platform for managing the **2027 International Energy Conservation Code (IECC)** development process. Built for the ICC Secretariat to track **510 code change proposals** across commercial and residential tracks — from submission through subgroup review, consensus committee voting, and final disposition.
 
 > **Status:** Active internal tool. 34 development sessions completed.
@@ -208,4 +206,4 @@ Three-phase roadmap (see [`docs/PORTAL_ROADMAP.md`](docs/PORTAL_ROADMAP.md)):
 
 ## License
 
-This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
+This project is proprietary to the International Code Council. All rights reserved.

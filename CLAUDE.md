@@ -57,7 +57,6 @@ IECC_PORTAL/
 ├── PROJECT_MEMORY.md          # Session history (READ THIS)
 ├── CONTRIBUTING.md            # How to contribute (rules, workflow, patterns)
 ├── CHANGELOG.md               # Version history by session
-├── LICENSE                    # MIT license
 │
 ├── docs/                      # Reference documentation
 │   ├── QUERY_COOKBOOK.md       # Ready SQL queries
