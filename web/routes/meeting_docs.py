@@ -83,7 +83,7 @@ async def upload_document(
         next_order = row["next_order"]
 
         user = getattr(request.state, "user", None)
-        username = user.get("username", "") if user else ""
+        username = user.get("name", "") if user else ""
 
         conn.execute("""
             INSERT INTO meeting_documents
