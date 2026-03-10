@@ -1,0 +1,24 @@
+<div class="gl-staged-card" id="gl-card-{{ canonical_id }}">
+    <div class="gl-staged-check">&#x2714;</div>
+    <div class="gl-staged-id">{{ canonical_id }}</div>
+    <div class="gl-staged-rec">{{ recommendation }}</div>
+    {% if vote_for is not none %}
+    <div class="gl-staged-votes">{{ vote_for }}-{{ vote_against }}-{{ vote_not_voting or 0 }}</div>
+    {% endif %}
+    <div class="gl-staged-edit">
+        <button class="gl-btn"
+                hx-post="/meeting/{{ meeting_id }}/unstage/{{ canonical_id }}?gl_source=go-live"
+                hx-target="#gl-card-{{ canonical_id }}"
+                hx-swap="outerHTML"
+                hx-confirm="Edit the action for {{ canonical_id }}?">
+            Edit Action
+        </button>
+    </div>
+</div>
+
+<!-- OOB: Update Go Live progress -->
+<div id="gl-progress-text" hx-swap-oob="innerHTML">{{ done_count }} / {{ total }}</div>
+<div id="gl-progress-fill" hx-swap-oob="outerHTML">
+    <div class="gl-progress-fill" id="gl-progress-fill"
+         style="width: {{ ((done_count / total * 100) if total > 0 else 0)|round(0)|int }}%;"></div>
+</div>

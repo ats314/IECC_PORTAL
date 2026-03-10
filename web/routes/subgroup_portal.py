@@ -67,11 +67,11 @@ def _get_meeting(conn, meeting_id):
     return dict(meeting)
 
 
-# ==================== PORTAL MAIN VIEW ====================
+def _load_portal_data(meeting_id: int) -> dict:
+    """Load all meeting, agenda, staging, content, and member data.
 
-@router.get("/meeting/{meeting_id}/portal")
-async def meeting_portal(request: Request, meeting_id: int):
-    """Render the chair's meeting portal with agenda and action entry."""
+    Shared by both the regular portal and Go Live views.
+    """
     with get_db() as conn:
         _ensure_tables(conn)
         meeting = _get_meeting(conn, meeting_id)
@@ -131,7 +131,6 @@ async def meeting_portal(request: Request, meeting_id: int):
                         if row["proposal_uid_a"] == uid or row["proposal_uid_b"] == uid:
                             if uid not in proposal_links_map:
                                 proposal_links_map[uid] = []
-                            # Show the OTHER proposal's canonical_id
                             other_id = row["canonical_b"] if row["proposal_uid_a"] == uid else row["canonical_a"]
                             proposal_links_map[uid].append({
                                 "canonical_id": other_id,
@@ -174,18 +173,49 @@ async def meeting_portal(request: Request, meeting_id: int):
             (meeting["body"],)
         ).fetchall()]
 
-    return render(request, "meeting_portal.html", {
+    return {
         "meeting": meeting,
         "agenda": agenda,
         "available": available,
         "total": len(agenda),
         "done_count": done_count,
-        "recommendations": config.RECOMMENDATIONS,
         "is_completed": is_completed,
         "has_modifications": has_modifications,
         "committed_actions": committed_actions,
         "members": members,
-    })
+    }
+
+
+# ==================== PORTAL MAIN VIEW ====================
+
+@router.get("/meeting/{meeting_id}/portal")
+async def meeting_portal(request: Request, meeting_id: int):
+    """Render the chair's meeting portal with agenda and action entry."""
+    data = _load_portal_data(meeting_id)
+    data["recommendations"] = config.RECOMMENDATIONS
+    return render(request, "meeting_portal.html", data)
+
+
+# ==================== GO LIVE PRESENTATION MODE ====================
+
+@router.get("/meeting/{meeting_id}/go-live")
+async def meeting_go_live(request: Request, meeting_id: int):
+    """Render the Go Live presentation mode for screen-sharing."""
+    data = _load_portal_data(meeting_id)
+    data["recommendations"] = config.RECOMMENDATIONS
+
+    # Find the first un-staged agenda item index
+    current_index = 0
+    for i, item in enumerate(data["agenda"]):
+        if not item["staged_action"]:
+            current_index = i
+            break
+    data["current_index"] = current_index
+
+    user = getattr(request.state, "user", None)
+    data["request"] = request
+    data["user"] = user
+    return request.app.state.templates.TemplateResponse("meeting_go_live.html", data)
 
 
 # ==================== AGENDA MANAGEMENT ====================
@@ -270,6 +300,7 @@ async def stage_action(
     modification_text: str = Form(""),
     moved_by: str = Form(""),
     seconded_by: str = Form(""),
+    gl_source: str = Form(""),
 ):
     """Stage a subgroup action (NOT committed to main DB yet)."""
     with get_db() as conn:
@@ -334,7 +365,8 @@ async def stage_action(
             (meeting_id,)
         ).fetchone()["c"]
 
-    return templates.TemplateResponse("partials/action_saved.html", {
+    template_name = "partials/go_live_staged.html" if gl_source == "go-live" else "partials/action_saved.html"
+    return templates.TemplateResponse(template_name, {
         "request": request,
         "canonical_id": canonical_id,
         "recommendation": recommendation,
@@ -351,7 +383,7 @@ async def stage_action(
 
 
 @router.post("/meeting/{meeting_id}/unstage/{canonical_id}")
-async def unstage_action(request: Request, meeting_id: int, canonical_id: str):
+async def unstage_action(request: Request, meeting_id: int, canonical_id: str, gl_source: str = ""):
     """Remove a staged action (chair wants to redo it). Returns HTMX partial if HX-Request."""
     with get_db() as conn:
         _ensure_tables(conn)
@@ -401,7 +433,8 @@ async def unstage_action(request: Request, meeting_id: int, canonical_id: str):
             ).fetchall()]
 
             templates = request.app.state.templates
-            return templates.TemplateResponse("partials/action_unstaged.html", {
+            template_name = "partials/go_live_unstaged.html" if gl_source == "go-live" else "partials/action_unstaged.html"
+            return templates.TemplateResponse(template_name, {
                 "request": request,
                 "meeting_id": meeting_id,
                 "canonical_id": canonical_id,

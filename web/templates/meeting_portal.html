@@ -39,6 +39,9 @@
             <div class="progress-fill" style="width: {{ ((done_count / total * 100) if total > 0 else 0)|round(0)|int }}%;"></div>
         </div>
         <div class="progress-text" id="progress-text">{{ done_count }} / {{ total }} actions recorded</div>
+        {% if not is_completed %}
+        <a href="/meeting/{{ meeting.id }}/go-live" class="btn btn-primary" style="margin-left: 1rem; white-space: nowrap;">&#x25B6; Go Live</a>
+        {% endif %}
     </div>
     {% endif %}
 </div>

@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Go Live — {{ meeting.body }} — ICC</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="stylesheet" href="/static/css/main.css">
+    <link rel="stylesheet" href="/static/css/go-live.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/quill/1.3.7/quill.snow.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/quill/1.3.7/quill.min.js"></script>
+    <script src="/static/js/htmx.min.js"></script>
+</head>
+<body class="go-live">
+
+<!-- ==================== NAVBAR ==================== -->
+<nav class="gl-navbar">
+    <div class="gl-navbar-title">{{ meeting.body }}</div>
+    <div class="gl-navbar-center">
+        <div class="gl-progress-wrap">
+            <div class="gl-progress-bar">
+                <div class="gl-progress-fill" id="gl-progress-fill"
+                     style="width: {{ ((done_count / total * 100) if total > 0 else 0)|round(0)|int }}%;"></div>
+            </div>
+            <span class="gl-progress-text" id="gl-progress-text">{{ done_count }} / {{ total }}</span>
+        </div>
+        <span class="gl-clock" id="gl-clock"></span>
+    </div>
+    <div class="gl-navbar-actions">
+        <button class="gl-btn" onclick="toggleFullscreen()" title="Toggle fullscreen">&#x26F6; Fullscreen</button>
+        <a href="/meeting/{{ meeting.id }}/portal" class="gl-btn">Exit Go Live</a>
+    </div>
+</nav>
+
+<!-- ==================== MAIN ==================== -->
+<div class="gl-main">
+
+{% if not agenda %}
+<div class="gl-all-done">
+    <div class="gl-all-done-icon">&#x1F4CB;</div>
+    <h2>No agenda items</h2>
+    <p>Go back to the portal to populate the agenda first.</p>
+    <a href="/meeting/{{ meeting.id }}/portal" class="gl-btn">Back to Portal</a>
+</div>
+{% else %}
+
+{% for item in agenda %}
+<div class="gl-slide {% if loop.index0 == current_index %}gl-active{% endif %}"
+     id="gl-slide-{{ loop.index0 }}"
+     data-index="{{ loop.index0 }}"
+     data-canonical="{{ item.canonical_id }}"
+     data-staged="{{ 'true' if item.staged_action else 'false' }}">
+
+    {% if item.staged_action %}
+    {# === STAGED VIEW === #}
+    <div class="gl-staged-card" id="gl-card-{{ item.canonical_id }}">
+        <div class="gl-staged-check">&#x2714;</div>
+        <div class="gl-staged-id">{{ item.canonical_id }}</div>
+        <div class="gl-staged-rec">{{ item.staged_action.recommendation }}</div>
+        {% if item.staged_action.vote_for is not none %}
+        <div class="gl-staged-votes">{{ item.staged_action.vote_for }}-{{ item.staged_action.vote_against }}-{{ item.staged_action.vote_not_voting or 0 }}</div>
+        {% endif %}
+        <div class="gl-staged-edit">
+            <button class="gl-btn"
+                    hx-post="/meeting/{{ meeting.id }}/unstage/{{ item.canonical_id }}?gl_source=go-live"
+                    hx-target="#gl-card-{{ item.canonical_id }}"
+                    hx-swap="outerHTML"
+                    hx-confirm="Edit the action for {{ item.canonical_id }}?">
+                Edit Action
+            </button>
+        </div>
+    </div>
+
+    {% else %}
+    {# === ACTION ENTRY VIEW === #}
+    <div id="gl-card-{{ item.canonical_id }}">
+        <!-- Proposal Header -->
+        <div class="gl-proposal-header">
+            <div class="gl-proposal-id">{{ item.canonical_id }}</div>
+            <div class="gl-proposal-meta">{{ item.code_section or '' }}</div>
+            {% if item.proponent %}
+            <div class="gl-proposal-proponent">{{ item.proponent }}</div>
+            {% endif %}
+            <div class="gl-badges">
+                {% if item.content %}
+                <span class="badge badge-content">TEXT</span>
+                {% endif %}
+                {% if item.modifications %}
+                <span class="badge badge-mod-available">{{ item.modifications|length }} MOD{{ 's' if item.modifications|length > 1 }}</span>
+                {% endif %}
+                {% if item.cdpaccess_url %}
+                <a href="{{ item.cdpaccess_url }}" target="_blank" class="badge" style="background: var(--bg-input); border: 1px solid var(--border); color: var(--icc-light);">cdpACCESS &#x2197;</a>
+                {% endif %}
+            </div>
+        </div>
+
+        {# Cross-references #}
+        {% if item.links %}
+        <div class="gl-cross-refs">
+            <span class="cross-refs-label">Related:</span>
+            {% for link in item.links %}
+            <span class="cross-ref-chip" title="{{ link.link_type }}: {{ link.notes or '' }}">
+                {{ link.canonical_id }}
+                <span class="cross-ref-type">{{ link.link_type|replace('_', ' ') }}</span>
+            </span>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {# Content Panel #}
+        {% if item.content or item.modifications %}
+        <div class="gl-content-panel">
+            <div class="gl-content-tabs">
+                {% if item.content and item.content.proposal_html %}
+                <button class="gl-content-tab active" onclick="switchTab(this, 'proposal-{{ loop.index0 }}')">Proposal Language</button>
+                {% endif %}
+                {% if item.modifications %}
+                <button class="gl-content-tab {% if not item.content or not item.content.proposal_html %}active{% endif %}" onclick="switchTab(this, 'mods-{{ loop.index0 }}')">Modifications ({{ item.modifications|length }})</button>
+                {% endif %}
+            </div>
+            {% if item.content and item.content.proposal_html %}
+            <div class="gl-tab-pane active" id="tab-proposal-{{ loop.index0 }}">
+                <div class="gl-content-body mod-rich">{{ item.content.proposal_html|safe }}</div>
+                {% if item.content.reason_text %}
+                <div style="padding: 0.5rem 1rem; border-top: 1px solid var(--border); font-size: 0.85rem;">
+                    <strong style="color: var(--text-muted);">Proponent's Reason:</strong>
+                    <span style="color: var(--text);">{{ item.content.reason_text[:400] }}{% if item.content.reason_text|length > 400 %}...{% endif %}</span>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+            {% if item.modifications %}
+            <div class="gl-tab-pane {% if not item.content or not item.content.proposal_html %}active{% endif %}" id="tab-mods-{{ loop.index0 }}">
+                {% for mod in item.modifications %}
+                <div class="gl-mod-item">
+                    <div class="gl-mod-header">
+                        <span>
+                            {% if mod.submitted_by %}<strong style="color: var(--text-bright);">{{ mod.submitted_by }}</strong>{% endif %}
+                            {% if mod.submitted_date %}<span class="text-muted text-sm" style="margin-left: 0.5rem;">{{ mod.submitted_date }}</span>{% endif %}
+                        </span>
+                        <button type="button" class="gl-btn load-mod-btn"
+                                data-mod-html="{{ mod.modification_html|e }}"
+                                onclick="glLoadMod(this)">
+                            Load into Editor
+                        </button>
+                    </div>
+                    <div class="gl-content-body mod-rich" style="max-height: 150px;">{{ mod.modification_html|safe }}</div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        {# Action Form #}
+        <form hx-post="/meeting/{{ meeting.id }}/stage"
+              hx-target="#gl-card-{{ item.canonical_id }}"
+              hx-swap="outerHTML"
+              class="gl-action-form"
+              id="gl-form-{{ loop.index0 }}">
+            <input type="hidden" name="canonical_id" value="{{ item.canonical_id }}">
+            <input type="hidden" name="gl_source" value="go-live">
+            <input type="hidden" name="recommendation" class="gl-rec-input" value="">
+
+            {# Recommendation Tiles #}
+            <div class="gl-rec-tiles">
+                <div class="gl-rec-tile approve" onclick="selectRec(this, 'Approved as Submitted')">APPROVE</div>
+                <div class="gl-rec-tile modified" onclick="selectRec(this, 'Approved as Modified')">APPROVE AS MODIFIED</div>
+                <div class="gl-rec-tile disapprove" onclick="selectRec(this, 'Disapproved')">DISAPPROVE</div>
+                <div class="gl-rec-tile other-rec" onclick="selectOther(this)">OTHER...</div>
+            </div>
+
+            {# Other dropdown #}
+            <div class="gl-other-dropdown">
+                <select onchange="selectOtherValue(this)">
+                    <option value="">Select recommendation...</option>
+                    {% for rec in recommendations %}
+                    {% if rec not in ['Approved as Submitted', 'Approved as Modified', 'Disapproved'] %}
+                    <option value="{{ rec }}">{{ rec }}</option>
+                    {% endif %}
+                    {% endfor %}
+                </select>
+            </div>
+
+            {# Vote Counters #}
+            <div class="gl-vote-row">
+                <div class="gl-vote-group">
+                    <span class="gl-vote-label">For</span>
+                    <div class="gl-vote-controls">
+                        <button type="button" class="gl-vote-btn" onclick="adjustVote(this, 'vote_for', -1)">-</button>
+                        <input type="number" name="vote_for" class="gl-vote-display" value="0" min="0">
+                        <button type="button" class="gl-vote-btn" onclick="adjustVote(this, 'vote_for', 1)">+</button>
+                    </div>
+                </div>
+                <div class="gl-vote-group">
+                    <span class="gl-vote-label">Against</span>
+                    <div class="gl-vote-controls">
+                        <button type="button" class="gl-vote-btn" onclick="adjustVote(this, 'vote_against', -1)">-</button>
+                        <input type="number" name="vote_against" class="gl-vote-display" value="0" min="0">
+                        <button type="button" class="gl-vote-btn" onclick="adjustVote(this, 'vote_against', 1)">+</button>
+                    </div>
+                </div>
+                <div class="gl-vote-group">
+                    <span class="gl-vote-label">Not Voting</span>
+                    <div class="gl-vote-controls">
+                        <button type="button" class="gl-vote-btn" onclick="adjustVote(this, 'vote_not_voting', -1)">-</button>
+                        <input type="number" name="vote_not_voting" class="gl-vote-display" value="0" min="0">
+                        <button type="button" class="gl-vote-btn" onclick="adjustVote(this, 'vote_not_voting', 1)">+</button>
+                    </div>
+                </div>
+                <div class="gl-vote-group" style="justify-content: flex-end;">
+                    <span class="gl-vote-label">&nbsp;</span>
+                    <button type="button" class="gl-unanimous-btn" onclick="glUnanimous(this)">Unanimous</button>
+                </div>
+            </div>
+
+            {# Moved By / Seconded By #}
+            <div class="gl-form-row">
+                <div class="gl-form-group">
+                    <label>Moved By</label>
+                    <select name="moved_by">
+                        <option value="">Select...</option>
+                        {% for m in members %}
+                        <option value="{{ m.display_name }}">{{ m.display_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="gl-form-group">
+                    <label>Seconded By</label>
+                    <select name="seconded_by">
+                        <option value="">Select...</option>
+                        {% for m in members %}
+                        <option value="{{ m.display_name }}">{{ m.display_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            {# Reason #}
+            <div class="gl-reason-row">
+                <div class="gl-form-group">
+                    <label>Reason Statement</label>
+                    <textarea name="reason" rows="2" placeholder="Committee reason..."></textarea>
+                </div>
+            </div>
+
+            {# Modification Editor (hidden until needed) #}
+            <div class="gl-mod-group">
+                <label>
+                    Modification Text
+                    <span class="text-muted text-xs">(underline = additions, strikethrough = deletions)</span>
+                    {% if item.content and item.content.proposal_html %}
+                    <button type="button" class="gl-btn" style="margin-left: 0.5rem; font-size: 0.75rem;"
+                            onclick="glLoadProposal(this)">
+                        Load Original Text
+                    </button>
+                    {% endif %}
+                </label>
+                <input type="hidden" name="modification_text" class="gl-mod-hidden" value="">
+                <div class="quill-editor" style="min-height: 120px;"
+                     {% if item.content and item.content.proposal_html %}data-proposal-html="{{ item.content.proposal_html|e }}"{% endif %}></div>
+            </div>
+
+            {# Submit #}
+            <div class="gl-submit-row">
+                <button type="submit" class="gl-submit-btn" disabled>
+                    <span class="gl-submit-text">&#x25B6; RECORD ACTION</span>
+                    <span class="gl-submit-loading">Saving...</span>
+                </button>
+            </div>
+        </form>
+    </div>
+    {% endif %}
+
+    {# Navigation #}
+    <div class="gl-nav-arrows">
+        <button class="gl-nav-btn" onclick="navigateSlide(-1)" {% if loop.first %}disabled{% endif %}>&larr; Previous</button>
+        <span class="gl-nav-indicator" id="gl-nav-ind-{{ loop.index0 }}">{{ loop.index }} of {{ agenda|length }}</span>
+        <button class="gl-nav-btn" onclick="navigateSlide(1)" {% if loop.last %}disabled{% endif %}>Next &rarr;</button>
+    </div>
+</div>
+{% endfor %}
+
+{# All Done overlay (hidden by default) #}
+<div class="gl-all-done" id="gl-all-done" style="display: none;">
+    <div class="gl-all-done-icon">&#x2705;</div>
+    <h2>All Actions Recorded</h2>
+    <p>{{ total }} proposals addressed. Ready for review.</p>
+    <a href="/meeting/{{ meeting.id }}/review" class="gl-btn" style="display: inline-block; margin-top: 1rem; padding: 0.6rem 1.5rem; font-size: 1rem; background: #166534; border-color: var(--success);">
+        Review &amp; Send to Secretariat &rarr;
+    </a>
+</div>
+
+{% endif %}
+</div>
+
+<!-- ==================== JAVASCRIPT ==================== -->
+<script>
+(function() {
+    // State
+    let currentIndex = {{ current_index }};
+    const totalSlides = {{ agenda|length }};
+
+    // === CLOCK ===
+    function updateClock() {
+        const el = document.getElementById('gl-clock');
+        if (el) el.textContent = new Date().toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit', second: '2-digit'});
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // === FULLSCREEN ===
+    window.toggleFullscreen = function() {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(function(){});
+        } else {
+            document.exitFullscreen();
+        }
+    };
+
+    // === SLIDE NAVIGATION ===
+    function showSlide(index) {
+        if (index < 0 || index >= totalSlides) return;
+        document.querySelectorAll('.gl-slide').forEach(function(s) { s.classList.remove('gl-active'); });
+        const slide = document.getElementById('gl-slide-' + index);
+        if (slide) {
+            slide.classList.add('gl-active');
+            currentIndex = index;
+            slide.scrollIntoView({behavior: 'smooth', block: 'start'});
+        }
+    }
+
+    window.navigateSlide = function(delta) {
+        showSlide(currentIndex + delta);
+    };
+
+    // Keyboard navigation
+    document.addEventListener('keydown', function(e) {
+        const tag = e.target.tagName.toLowerCase();
+        if (tag === 'input' || tag === 'textarea' || tag === 'select' || e.target.closest('.ql-editor')) return;
+        if (e.key === 'ArrowLeft') { e.preventDefault(); navigateSlide(-1); }
+        if (e.key === 'ArrowRight') { e.preventDefault(); navigateSlide(1); }
+    });
+
+    // === RECOMMENDATION TILES ===
+    window.selectRec = function(tile, value) {
+        const form = tile.closest('form');
+        form.querySelectorAll('.gl-rec-tile').forEach(function(t) { t.classList.remove('selected'); });
+        tile.classList.add('selected');
+        form.querySelector('.gl-rec-input').value = value;
+        form.querySelector('.gl-submit-btn').disabled = false;
+
+        // Hide other dropdown
+        form.querySelector('.gl-other-dropdown').classList.remove('visible');
+
+        // Show/hide mod editor
+        const modGroup = form.querySelector('.gl-mod-group');
+        if (value.includes('Modified')) {
+            modGroup.classList.add('visible');
+            initQuillInForm(form);
+        } else {
+            modGroup.classList.remove('visible');
+        }
+    };
+
+    window.selectOther = function(tile) {
+        const form = tile.closest('form');
+        form.querySelectorAll('.gl-rec-tile').forEach(function(t) { t.classList.remove('selected'); });
+        tile.classList.add('selected');
+        form.querySelector('.gl-other-dropdown').classList.add('visible');
+        form.querySelector('.gl-other-dropdown select').focus();
+    };
+
+    window.selectOtherValue = function(select) {
+        const form = select.closest('form');
+        const value = select.value;
+        if (value) {
+            form.querySelector('.gl-rec-input').value = value;
+            form.querySelector('.gl-submit-btn').disabled = false;
+            // Show mod editor if needed
+            const modGroup = form.querySelector('.gl-mod-group');
+            if (value.includes('Modified')) {
+                modGroup.classList.add('visible');
+                initQuillInForm(form);
+            } else {
+                modGroup.classList.remove('visible');
+            }
+        }
+    };
+
+    // === VOTE COUNTERS ===
+    window.adjustVote = function(btn, name, delta) {
+        const form = btn.closest('form');
+        const input = form.querySelector('input[name="' + name + '"]');
+        const val = parseInt(input.value || 0) + delta;
+        input.value = Math.max(0, val);
+    };
+
+    window.glUnanimous = function(btn) {
+        const form = btn.closest('form');
+        const vFor = form.querySelector('input[name="vote_for"]');
+        const vAgainst = form.querySelector('input[name="vote_against"]');
+        const vNv = form.querySelector('input[name="vote_not_voting"]');
+        const total = parseInt(vFor.value || 0) + parseInt(vAgainst.value || 0) + parseInt(vNv.value || 0);
+        if (total > 0) { vFor.value = total; } else { vFor.value = vFor.value || 0; }
+        vAgainst.value = 0;
+        vNv.value = 0;
+        btn.classList.add('flash');
+        setTimeout(function() { btn.classList.remove('flash'); }, 600);
+    };
+
+    // === QUILL EDITOR ===
+    function initQuillInForm(form) {
+        var editorDiv = form.querySelector('.quill-editor');
+        if (!editorDiv || editorDiv.__quill) return;
+        var quill = new Quill(editorDiv, {
+            theme: 'snow',
+            modules: {
+                toolbar: [['bold', 'underline', 'strike'], [{'list': 'ordered'}, {'list': 'bullet'}], ['clean']]
+            },
+            placeholder: 'Enter modification language...'
+        });
+        editorDiv.__quill = quill;
+        form.addEventListener('htmx:configRequest', function() {
+            var hidden = form.querySelector('.gl-mod-hidden');
+            var html = quill.root.innerHTML;
+            hidden.value = (html === '<p><br></p>') ? '' : html;
+        });
+    }
+
+    window.glLoadProposal = function(btn) {
+        var form = btn.closest('form');
+        var editorDiv = form.querySelector('.quill-editor');
+        if (!editorDiv) return;
+        var html = editorDiv.dataset.proposalHtml;
+        if (!html) return;
+        initQuillInForm(form);
+        var quill = editorDiv.__quill;
+        if (!quill) return;
+        var tmp = document.createElement('textarea');
+        tmp.innerHTML = html;
+        if (confirm('Load original proposal text? This replaces editor content.')) {
+            quill.root.innerHTML = tmp.value;
+        }
+    };
+
+    window.glLoadMod = function(btn) {
+        var slide = btn.closest('.gl-slide');
+        if (!slide) return;
+        var form = slide.querySelector('.gl-action-form');
+        if (!form) return;
+        // Select "Approved as Modified"
+        var modTile = form.querySelectorAll('.gl-rec-tile')[1];
+        if (modTile) selectRec(modTile, 'Approved as Modified');
+        initQuillInForm(form);
+        var editorDiv = form.querySelector('.quill-editor');
+        var quill = editorDiv ? editorDiv.__quill : null;
+        if (!quill) return;
+        var tmp = document.createElement('textarea');
+        tmp.innerHTML = btn.dataset.modHtml;
+        quill.root.innerHTML = tmp.value;
+        btn.textContent = 'Loaded';
+        setTimeout(function() { btn.textContent = 'Load into Editor'; }, 1200);
+    };
+
+    // === CONTENT TABS ===
+    window.switchTab = function(tabBtn, paneId) {
+        var panel = tabBtn.closest('.gl-content-panel');
+        panel.querySelectorAll('.gl-content-tab').forEach(function(t) { t.classList.remove('active'); });
+        panel.querySelectorAll('.gl-tab-pane').forEach(function(p) { p.classList.remove('active'); });
+        tabBtn.classList.add('active');
+        var pane = document.getElementById('tab-' + paneId);
+        if (pane) pane.classList.add('active');
+    };
+
+    // === AUTO-ADVANCE AFTER STAGING ===
+    document.body.addEventListener('htmx:afterSwap', function(evt) {
+        setTimeout(function() {
+            // Check how many remain
+            var remaining = 0;
+            document.querySelectorAll('.gl-slide').forEach(function(s) {
+                if (s.dataset.staged !== 'true' && !s.querySelector('.gl-staged-card')) {
+                    remaining++;
+                }
+            });
+
+            // Update staged state on current slide
+            var activeSlide = document.querySelector('.gl-slide.gl-active');
+            if (activeSlide && activeSlide.querySelector('.gl-staged-card')) {
+                activeSlide.dataset.staged = 'true';
+            }
+
+            // Find next un-staged slide
+            var found = false;
+            for (var i = 0; i < totalSlides; i++) {
+                var idx = (currentIndex + 1 + i) % totalSlides;
+                var s = document.getElementById('gl-slide-' + idx);
+                if (s && s.dataset.staged !== 'true' && !s.querySelector('.gl-staged-card')) {
+                    setTimeout(function() { showSlide(idx); }, 300);
+                    found = true;
+                    break;
+                }
+            }
+
+            // If all done, show completion
+            if (!found) {
+                var allDone = document.getElementById('gl-all-done');
+                if (allDone) {
+                    document.querySelectorAll('.gl-slide').forEach(function(s) { s.classList.remove('gl-active'); });
+                    allDone.style.display = 'block';
+                }
+            }
+        }, 100);
+    });
+
+})();
+</script>
+
+</body>
+</html>

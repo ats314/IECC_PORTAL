@@ -1,0 +1,146 @@
+<div id="gl-card-{{ canonical_id }}">
+    <!-- Proposal Header -->
+    <div class="gl-proposal-header">
+        <div class="gl-proposal-id">{{ canonical_id }}</div>
+        <div class="gl-proposal-meta">{{ code_section or '' }}</div>
+        {% if proponent %}
+        <div class="gl-proposal-proponent">{{ proponent }}</div>
+        {% endif %}
+    </div>
+
+    {# Action Form with pre-filled values #}
+    <form hx-post="/meeting/{{ meeting_id }}/stage"
+          hx-target="#gl-card-{{ canonical_id }}"
+          hx-swap="outerHTML"
+          class="gl-action-form">
+        <input type="hidden" name="canonical_id" value="{{ canonical_id }}">
+        <input type="hidden" name="gl_source" value="go-live">
+        <input type="hidden" name="recommendation" class="gl-rec-input" value="{{ prev_recommendation }}">
+
+        {# Recommendation Tiles #}
+        <div class="gl-rec-tiles">
+            <div class="gl-rec-tile approve {% if prev_recommendation == 'Approved as Submitted' %}selected{% endif %}"
+                 onclick="selectRec(this, 'Approved as Submitted')">APPROVE</div>
+            <div class="gl-rec-tile modified {% if prev_recommendation == 'Approved as Modified' %}selected{% endif %}"
+                 onclick="selectRec(this, 'Approved as Modified')">APPROVE AS MODIFIED</div>
+            <div class="gl-rec-tile disapprove {% if prev_recommendation == 'Disapproved' %}selected{% endif %}"
+                 onclick="selectRec(this, 'Disapproved')">DISAPPROVE</div>
+            <div class="gl-rec-tile other-rec {% if prev_recommendation and prev_recommendation not in ['Approved as Submitted', 'Approved as Modified', 'Disapproved'] %}selected{% endif %}"
+                 onclick="selectOther(this)">OTHER...</div>
+        </div>
+
+        {# Other dropdown #}
+        <div class="gl-other-dropdown {% if prev_recommendation and prev_recommendation not in ['Approved as Submitted', 'Approved as Modified', 'Disapproved'] %}visible{% endif %}">
+            <select onchange="selectOtherValue(this)">
+                <option value="">Select recommendation...</option>
+                {% for rec in recommendations %}
+                {% if rec not in ['Approved as Submitted', 'Approved as Modified', 'Disapproved'] %}
+                <option value="{{ rec }}" {% if prev_recommendation == rec %}selected{% endif %}>{{ rec }}</option>
+                {% endif %}
+                {% endfor %}
+            </select>
+        </div>
+
+        {# Vote Counters #}
+        <div class="gl-vote-row">
+            <div class="gl-vote-group">
+                <span class="gl-vote-label">For</span>
+                <div class="gl-vote-controls">
+                    <button type="button" class="gl-vote-btn" onclick="adjustVote(this, 'vote_for', -1)">-</button>
+                    <input type="number" name="vote_for" class="gl-vote-display"
+                           value="{{ prev_vote_for if prev_vote_for is not none else 0 }}" min="0">
+                    <button type="button" class="gl-vote-btn" onclick="adjustVote(this, 'vote_for', 1)">+</button>
+                </div>
+            </div>
+            <div class="gl-vote-group">
+                <span class="gl-vote-label">Against</span>
+                <div class="gl-vote-controls">
+                    <button type="button" class="gl-vote-btn" onclick="adjustVote(this, 'vote_against', -1)">-</button>
+                    <input type="number" name="vote_against" class="gl-vote-display"
+                           value="{{ prev_vote_against if prev_vote_against is not none else 0 }}" min="0">
+                    <button type="button" class="gl-vote-btn" onclick="adjustVote(this, 'vote_against', 1)">+</button>
+                </div>
+            </div>
+            <div class="gl-vote-group">
+                <span class="gl-vote-label">Not Voting</span>
+                <div class="gl-vote-controls">
+                    <button type="button" class="gl-vote-btn" onclick="adjustVote(this, 'vote_not_voting', -1)">-</button>
+                    <input type="number" name="vote_not_voting" class="gl-vote-display"
+                           value="{{ prev_vote_not_voting if prev_vote_not_voting is not none else 0 }}" min="0">
+                    <button type="button" class="gl-vote-btn" onclick="adjustVote(this, 'vote_not_voting', 1)">+</button>
+                </div>
+            </div>
+            <div class="gl-vote-group" style="justify-content: flex-end;">
+                <span class="gl-vote-label">&nbsp;</span>
+                <button type="button" class="gl-unanimous-btn" onclick="glUnanimous(this)">Unanimous</button>
+            </div>
+        </div>
+
+        {# Moved By / Seconded By #}
+        <div class="gl-form-row">
+            <div class="gl-form-group">
+                <label>Moved By</label>
+                <select name="moved_by">
+                    <option value="">Select...</option>
+                    {% for m in members %}
+                    <option value="{{ m.display_name }}" {% if prev_moved_by == m.display_name %}selected{% endif %}>{{ m.display_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="gl-form-group">
+                <label>Seconded By</label>
+                <select name="seconded_by">
+                    <option value="">Select...</option>
+                    {% for m in members %}
+                    <option value="{{ m.display_name }}" {% if prev_seconded_by == m.display_name %}selected{% endif %}>{{ m.display_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        {# Reason #}
+        <div class="gl-reason-row">
+            <div class="gl-form-group">
+                <label>Reason Statement</label>
+                <textarea name="reason" rows="2" placeholder="Committee reason...">{{ prev_reason or '' }}</textarea>
+            </div>
+        </div>
+
+        {# Modification Editor #}
+        <div class="gl-mod-group {% if prev_recommendation and 'Modified' in prev_recommendation %}visible{% endif %}">
+            <label>
+                Modification Text
+                <span class="text-muted text-xs">(underline = additions, strikethrough = deletions)</span>
+            </label>
+            <input type="hidden" name="modification_text" class="gl-mod-hidden" value="{{ prev_modification_text or '' }}">
+            <div class="quill-editor" style="min-height: 120px;">{{ (prev_modification_text or '')|safe }}</div>
+        </div>
+
+        <script>
+        (function() {
+            var card = document.getElementById('gl-card-{{ canonical_id }}');
+            if (card) {
+                var form = card.querySelector('form');
+                if (form && form.querySelector('.gl-mod-group').classList.contains('visible')) {
+                    setTimeout(function() { initQuillInForm(form); }, 50);
+                }
+            }
+        })();
+        </script>
+
+        {# Submit #}
+        <div class="gl-submit-row">
+            <button type="submit" class="gl-submit-btn" {% if not prev_recommendation %}disabled{% endif %}>
+                <span class="gl-submit-text">&#x25B6; RECORD ACTION</span>
+                <span class="gl-submit-loading">Saving...</span>
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- OOB: Update Go Live progress -->
+<div id="gl-progress-text" hx-swap-oob="innerHTML">{{ done_count }} / {{ total }}</div>
+<div id="gl-progress-fill" hx-swap-oob="outerHTML">
+    <div class="gl-progress-fill" id="gl-progress-fill"
+         style="width: {{ ((done_count / total * 100) if total > 0 else 0)|round(0)|int }}%;"></div>
+</div>

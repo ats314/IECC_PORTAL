@@ -1,0 +1,546 @@
+/* Go Live Presentation Mode — optimized for screen-sharing & projectors */
+
+body.go-live {
+    background: #000;
+    overflow-x: hidden;
+}
+
+/* === NAVBAR === */
+.gl-navbar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 52px;
+    padding: 0 1.5rem;
+    background: var(--icc-blue);
+    border-bottom: 2px solid var(--icc-light);
+}
+.gl-navbar-title {
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--text-bright);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 40%;
+}
+.gl-navbar-center {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex: 1;
+    justify-content: center;
+}
+.gl-navbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+/* Progress bar in navbar */
+.gl-progress-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-width: 200px;
+}
+.gl-progress-bar {
+    flex: 1;
+    height: 10px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 5px;
+    overflow: hidden;
+}
+.gl-progress-fill {
+    height: 100%;
+    background: var(--success);
+    border-radius: 5px;
+    transition: width 0.4s ease;
+}
+.gl-progress-text {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text-bright);
+    white-space: nowrap;
+}
+.gl-clock {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--icc-accent);
+    font-variant-numeric: tabular-nums;
+}
+.gl-btn {
+    padding: 0.35rem 0.75rem;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: rgba(255,255,255,0.1);
+    color: var(--text-bright);
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: background 0.15s;
+    text-decoration: none;
+}
+.gl-btn:hover { background: rgba(255,255,255,0.2); color: var(--text-bright); }
+
+/* === MAIN CONTAINER === */
+.gl-main {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 1.25rem 2rem;
+}
+
+/* === SLIDE === */
+.gl-slide {
+    display: none;
+}
+.gl-slide.gl-active {
+    display: block;
+}
+
+/* === PROPOSAL HEADER (huge, centered) === */
+.gl-proposal-header {
+    text-align: center;
+    padding: 1rem 0 0.75rem;
+}
+.gl-proposal-id {
+    font-size: 2.8rem;
+    font-weight: 800;
+    color: var(--text-bright);
+    letter-spacing: 0.02em;
+}
+.gl-proposal-meta {
+    font-size: 1.4rem;
+    color: var(--icc-accent);
+    margin-top: 0.25rem;
+}
+.gl-proposal-proponent {
+    font-size: 1.1rem;
+    color: var(--text-muted);
+    margin-top: 0.15rem;
+}
+.gl-badges {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+/* === CONTENT PANEL === */
+.gl-content-panel {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 1rem;
+    overflow: hidden;
+}
+.gl-content-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+}
+.gl-content-tab {
+    padding: 0.6rem 1.25rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s;
+    background: none;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+}
+.gl-content-tab:hover { color: var(--text-bright); }
+.gl-content-tab.active {
+    color: var(--icc-light);
+    border-bottom-color: var(--icc-light);
+}
+.gl-content-body {
+    max-height: 35vh;
+    overflow-y: auto;
+    padding: 1rem;
+    font-size: 1rem;
+    line-height: 1.8;
+    font-family: "Courier New", monospace;
+}
+.gl-content-body u { text-decoration: underline; text-decoration-color: var(--success); color: var(--success); }
+.gl-content-body s { text-decoration: line-through; text-decoration-color: var(--danger); color: var(--danger); opacity: 0.8; }
+.gl-content-body p { margin: 0.3rem 0; }
+.gl-tab-pane { display: none; }
+.gl-tab-pane.active { display: block; }
+.gl-no-content {
+    color: var(--text-muted);
+    font-style: italic;
+    text-align: center;
+    padding: 2rem;
+    font-family: inherit;
+}
+.gl-mod-item {
+    padding: 0.75rem;
+    border-bottom: 1px solid var(--border);
+}
+.gl-mod-item:last-child { border-bottom: none; }
+.gl-mod-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+}
+
+/* === CROSS-REFERENCES === */
+.gl-cross-refs {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.75rem;
+}
+
+/* === RECOMMENDATION TILES === */
+.gl-rec-tiles {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+.gl-rec-tile {
+    padding: 1.1rem 0.5rem;
+    text-align: center;
+    font-size: 1.1rem;
+    font-weight: 700;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 2px solid transparent;
+    user-select: none;
+}
+.gl-rec-tile:hover { transform: translateY(-1px); }
+
+.gl-rec-tile.approve {
+    background: #0a2e1a;
+    border-color: rgba(34, 197, 94, 0.4);
+    color: var(--success);
+}
+.gl-rec-tile.approve.selected {
+    background: #166534;
+    border-color: var(--success);
+    box-shadow: 0 0 20px rgba(34,197,94,0.3);
+}
+
+.gl-rec-tile.modified {
+    background: #1a0a2e;
+    border-color: rgba(156, 39, 176, 0.4);
+    color: #ce93d8;
+}
+.gl-rec-tile.modified.selected {
+    background: #4a1d6a;
+    border-color: #9C27B0;
+    box-shadow: 0 0 20px rgba(156,39,176,0.3);
+}
+
+.gl-rec-tile.disapprove {
+    background: var(--danger-bg);
+    border-color: rgba(239, 68, 68, 0.4);
+    color: var(--danger);
+}
+.gl-rec-tile.disapprove.selected {
+    background: #7f1d1d;
+    border-color: var(--danger);
+    box-shadow: 0 0 20px rgba(239,68,68,0.3);
+}
+
+.gl-rec-tile.other-rec {
+    background: var(--bg-input);
+    border-color: var(--border);
+    color: var(--text-muted);
+    font-size: 0.95rem;
+}
+.gl-rec-tile.other-rec.selected {
+    border-color: var(--icc-light);
+    color: var(--text-bright);
+    box-shadow: 0 0 15px rgba(46,117,182,0.3);
+}
+
+/* Other recommendation dropdown */
+.gl-other-dropdown {
+    display: none;
+    margin-bottom: 1rem;
+}
+.gl-other-dropdown.visible {
+    display: block;
+}
+.gl-other-dropdown select {
+    width: 100%;
+    padding: 0.6rem;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-size: 1rem;
+}
+
+/* === VOTE COUNTERS === */
+.gl-vote-row {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+.gl-vote-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+}
+.gl-vote-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+.gl-vote-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.gl-vote-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    background: var(--bg-input);
+    color: var(--text-bright);
+    font-size: 1.5rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+.gl-vote-btn:hover {
+    border-color: var(--icc-light);
+    background: var(--icc-blue);
+}
+.gl-vote-display {
+    width: 60px;
+    text-align: center;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--text-bright);
+    background: transparent;
+    border: none;
+    font-variant-numeric: tabular-nums;
+    -moz-appearance: textfield;
+}
+.gl-vote-display::-webkit-inner-spin-button,
+.gl-vote-display::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+.gl-unanimous-btn {
+    padding: 0.4rem 1rem;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--bg-input);
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+.gl-unanimous-btn:hover { border-color: var(--success); color: var(--success); }
+.gl-unanimous-btn.flash { background: #166534; color: var(--text-bright); border-color: var(--success); }
+
+/* === FORM FIELDS (moved/seconded/reason) === */
+.gl-form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+.gl-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+.gl-form-group label {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+.gl-form-group select,
+.gl-form-group textarea {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-size: 0.95rem;
+    font-family: inherit;
+}
+.gl-form-group select:focus,
+.gl-form-group textarea:focus {
+    outline: none;
+    border-color: var(--icc-light);
+}
+.gl-form-group textarea {
+    min-height: 60px;
+    resize: vertical;
+}
+.gl-reason-row {
+    margin-bottom: 0.75rem;
+}
+
+/* === MODIFICATION EDITOR === */
+.gl-mod-group {
+    display: none;
+    margin-bottom: 0.75rem;
+}
+.gl-mod-group.visible {
+    display: block;
+}
+.gl-mod-group label {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-bottom: 0.3rem;
+}
+.gl-mod-group .quill-editor {
+    min-height: 120px;
+}
+
+/* Quill dark theme overrides */
+.go-live .ql-toolbar.ql-snow { background: var(--bg-input); border-color: var(--border); border-radius: var(--radius) var(--radius) 0 0; }
+.go-live .ql-container.ql-snow { border-color: var(--border); border-radius: 0 0 var(--radius) var(--radius); background: var(--bg-input); color: var(--text); font-family: "Courier New", monospace; font-size: 0.95rem; }
+.go-live .ql-editor { min-height: 100px; line-height: 1.6; }
+.go-live .ql-editor.ql-blank::before { color: var(--text-muted); font-style: italic; }
+.go-live .ql-snow .ql-stroke { stroke: var(--text-muted); }
+.go-live .ql-snow .ql-fill { fill: var(--text-muted); }
+.go-live .ql-snow .ql-picker-label { color: var(--text-muted); }
+.go-live .ql-snow .ql-picker-options { background: var(--bg-card); border-color: var(--border); }
+.go-live .ql-snow button:hover .ql-stroke { stroke: var(--icc-light); }
+.go-live .ql-snow button:hover .ql-fill { fill: var(--icc-light); }
+
+/* === SUBMIT === */
+.gl-submit-row {
+    text-align: center;
+    padding: 0.5rem 0;
+}
+.gl-submit-btn {
+    font-size: 1.3rem;
+    font-weight: 700;
+    padding: 0.8rem 3rem;
+    border-radius: 8px;
+    border: 2px solid var(--icc-light);
+    background: var(--icc-blue);
+    color: var(--text-bright);
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.03em;
+}
+.gl-submit-btn:hover {
+    background: var(--icc-light);
+    box-shadow: 0 0 20px rgba(46,117,182,0.4);
+}
+.gl-submit-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* === STAGED (done) CARD === */
+.gl-staged-card {
+    text-align: center;
+    padding: 2rem;
+}
+.gl-staged-check {
+    font-size: 3rem;
+    color: var(--success);
+    margin-bottom: 0.5rem;
+}
+.gl-staged-id {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-bright);
+}
+.gl-staged-rec {
+    font-size: 1.3rem;
+    color: var(--success);
+    font-weight: 600;
+    margin-top: 0.25rem;
+}
+.gl-staged-votes {
+    font-size: 1.1rem;
+    color: var(--text-muted);
+    margin-top: 0.15rem;
+}
+.gl-staged-edit {
+    margin-top: 1rem;
+}
+
+/* === NAVIGATION ARROWS === */
+.gl-nav-arrows {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0;
+    margin-top: 0.5rem;
+    border-top: 1px solid var(--border);
+}
+.gl-nav-btn {
+    padding: 0.5rem 1.25rem;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--bg-input);
+    color: var(--text);
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+.gl-nav-btn:hover { border-color: var(--icc-light); color: var(--text-bright); }
+.gl-nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.gl-nav-indicator {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+/* === ALL DONE === */
+.gl-all-done {
+    text-align: center;
+    padding: 3rem 2rem;
+}
+.gl-all-done-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+}
+.gl-all-done h2 {
+    font-size: 2rem;
+    color: var(--text-bright);
+    margin-bottom: 0.5rem;
+}
+.gl-all-done p {
+    color: var(--text-muted);
+    font-size: 1.1rem;
+}
+.gl-all-done .gl-btn {
+    margin-top: 1.5rem;
+    padding: 0.6rem 1.5rem;
+    font-size: 1rem;
+}
+
+/* === FULLSCREEN === */
+:fullscreen .gl-navbar { position: fixed; width: 100%; }
+:fullscreen .gl-main { padding-top: 65px; }
+
+/* === HTMX LOADING === */
+.htmx-request .gl-submit-text { display: none; }
+.htmx-request .gl-submit-loading { display: inline; }
+.gl-submit-loading { display: none; }
