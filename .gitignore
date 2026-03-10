@@ -1,8 +1,4 @@
-# Database files
-iecc.db
-iecc.db-wal
-iecc.db-shm
-iecc.db-journal
+# Database WAL/journal artifacts (never commit these)
 *.db-wal
 *.db-shm
 *.db-journal
@@ -34,9 +30,6 @@ env/
 
 # Generated files
 web/generated/
-web/iecc.db
-web/iecc.db-journal
-web/iecc.db-wal
 
 # OneDrive / FUSE artifacts
 .fuse_hidden*

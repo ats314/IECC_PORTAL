@@ -24,42 +24,6 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-def _ensure_tables(conn):
-    """Create staging and agenda tables if they don't exist."""
-    conn.execute("""
-        CREATE TABLE IF NOT EXISTS sg_action_staging (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            meeting_id INTEGER NOT NULL,
-            proposal_uid TEXT NOT NULL,
-            canonical_id TEXT NOT NULL,
-            subgroup TEXT NOT NULL,
-            action_date TEXT NOT NULL,
-            recommendation TEXT NOT NULL,
-            vote_for INTEGER,
-            vote_against INTEGER,
-            vote_not_voting INTEGER,
-            reason TEXT,
-            modification_text TEXT,
-            moved_by TEXT,
-            seconded_by TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            UNIQUE(meeting_id, proposal_uid)
-        )
-    """)
-    conn.execute("""
-        CREATE TABLE IF NOT EXISTS meeting_agenda_items (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            meeting_id INTEGER NOT NULL,
-            proposal_uid TEXT NOT NULL,
-            sort_order INTEGER NOT NULL DEFAULT 0,
-            added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            UNIQUE(meeting_id, proposal_uid),
-            FOREIGN KEY (meeting_id) REFERENCES meetings(id),
-            FOREIGN KEY (proposal_uid) REFERENCES proposals(proposal_uid)
-        )
-    """)
-
-
 def _get_meeting(conn, meeting_id):
     meeting = conn.execute("SELECT * FROM meetings WHERE id = ?", (meeting_id,)).fetchone()
     if not meeting:
@@ -73,7 +37,6 @@ def _load_portal_data(meeting_id: int) -> dict:
     Shared by both the regular portal and Go Live views.
     """
     with get_db() as conn:
-        _ensure_tables(conn)
         meeting = _get_meeting(conn, meeting_id)
 
         # Get agenda items
@@ -224,7 +187,6 @@ async def meeting_go_live(request: Request, meeting_id: int):
 async def auto_populate_agenda(request: Request, meeting_id: int):
     """Auto-populate agenda with all pending proposals for the subgroup."""
     with get_db() as conn:
-        _ensure_tables(conn)
         meeting = _get_meeting(conn, meeting_id)
         subgroup_name = config.resolve_subgroup(meeting["body"])
         conn.execute(queries.AUTO_POPULATE_AGENDA, (meeting_id, meeting["track"], subgroup_name))
@@ -236,7 +198,7 @@ async def auto_populate_agenda(request: Request, meeting_id: int):
 async def add_to_agenda(request: Request, meeting_id: int, proposal_uid: str = Form(...)):
     """Add a single proposal to the agenda."""
     with get_db() as conn:
-        _ensure_tables(conn)
+
         # Get max sort order
         row = conn.execute(
             "SELECT COALESCE(MAX(sort_order), 0) + 10 as next_order FROM meeting_agenda_items WHERE meeting_id = ?",
@@ -251,7 +213,7 @@ async def add_to_agenda(request: Request, meeting_id: int, proposal_uid: str = F
 async def remove_from_agenda(request: Request, meeting_id: int, proposal_uid: str = Form(...)):
     """Remove a proposal from the agenda."""
     with get_db() as conn:
-        _ensure_tables(conn)
+
         # Also remove any staged action for this proposal
         conn.execute("DELETE FROM sg_action_staging WHERE meeting_id = ? AND proposal_uid = ?",
                      (meeting_id, proposal_uid))
@@ -267,7 +229,7 @@ async def reorder_agenda(request: Request, meeting_id: int):
     order = body.get("order", [])
 
     with get_db() as conn:
-        _ensure_tables(conn)
+
         for i, uid in enumerate(order):
             conn.execute(queries.UPDATE_AGENDA_ORDER, ((i + 1) * 10, meeting_id, uid))
     checkpoint()
@@ -278,7 +240,7 @@ async def reorder_agenda(request: Request, meeting_id: int):
 async def clear_agenda(request: Request, meeting_id: int):
     """Remove all items from agenda."""
     with get_db() as conn:
-        _ensure_tables(conn)
+
         conn.execute("DELETE FROM meeting_agenda_items WHERE meeting_id = ?", (meeting_id,))
         conn.execute("DELETE FROM sg_action_staging WHERE meeting_id = ?", (meeting_id,))
     checkpoint()
@@ -304,7 +266,6 @@ async def stage_action(
 ):
     """Stage a subgroup action (NOT committed to main DB yet)."""
     with get_db() as conn:
-        _ensure_tables(conn)
         meeting = _get_meeting(conn, meeting_id)
 
         prop = conn.execute(queries.PROPOSAL_UID_BY_CANONICAL, (canonical_id,)).fetchone()
@@ -386,7 +347,7 @@ async def stage_action(
 async def unstage_action(request: Request, meeting_id: int, canonical_id: str, gl_source: str = ""):
     """Remove a staged action (chair wants to redo it). Returns HTMX partial if HX-Request."""
     with get_db() as conn:
-        _ensure_tables(conn)
+
         # Get the previous values before deleting
         prev = conn.execute(
             "SELECT * FROM sg_action_staging WHERE meeting_id = ? AND canonical_id = ?",
@@ -465,7 +426,6 @@ async def unstage_action(request: Request, meeting_id: int, canonical_id: str, g
 async def review_meeting(request: Request, meeting_id: int):
     """Review all staged actions before sending to secretariat."""
     with get_db() as conn:
-        _ensure_tables(conn)
         meeting = _get_meeting(conn, meeting_id)
 
         staged = [dict(r) for r in conn.execute(
@@ -496,7 +456,6 @@ async def review_meeting(request: Request, meeting_id: int):
 async def send_to_secretariat(request: Request, meeting_id: int):
     """Commit all staged actions to the main subgroup_actions table."""
     with get_db() as conn:
-        _ensure_tables(conn)
         meeting = _get_meeting(conn, meeting_id)
 
         staged = conn.execute(

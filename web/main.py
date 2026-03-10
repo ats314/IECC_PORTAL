@@ -1,20 +1,38 @@
 """ICC Code Development Platform — FastAPI Application."""
 import sys
+import logging
 from pathlib import Path
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import RedirectResponse
 import config
 
+logger = logging.getLogger(__name__)
+
 # Ensure the web directory is in the path for imports
 sys.path.insert(0, str(Path(__file__).parent))
 
 from routes import auth, dashboard, proposals, meetings, subgroup_portal, exports, circforms
+from db.connection import init_schema
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Run schema initialization on startup."""
+    try:
+        init_schema()
+    except Exception as e:
+        logger.error(f"Schema initialization failed: {e}")
+        # Don't prevent app from starting — core tables may still work
+    yield
+
 
 app = FastAPI(
     title=config.APP_TITLE,
     version=config.APP_VERSION,
+    lifespan=lifespan,
 )
 
 # Static files
