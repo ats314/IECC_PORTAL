@@ -66,7 +66,7 @@ Proposals in PUBLIC_INPUT phase that received no consensus action are "Phase Clo
 
 ## Current Database State
 
-> **⚠️ LIVE COUNTS:** Run `python3 iecc_preflight.py` for current counts. See `IECC_STATUS_REPORT.md` for human-readable summary. Do NOT hardcode counts in docs.
+> **⚠️ LIVE COUNTS:** Run `python3 iecc_preflight.py` for current counts. See `CHANGELOG.md` for version history. Do NOT hardcode counts in docs.
 >
 > Schema details (tables, views, columns) are in **AGENT_GUIDE.md → Database Schema**.
 
@@ -1017,6 +1017,7 @@ Copy and fill this in at the end of every session (or use the iecc-session-close
 
 **State changes propagated:**
 - [ ] PROJECT_MEMORY.md — this entry
+- [ ] CHANGELOG.md — version history updated?
 - [ ] DEVELOPMENT.md — feature status or web patterns changed?
 - [ ] AGENT_GUIDE.md — schema/views/domain knowledge changed?
 - [ ] CLAUDE.md — project structure changed?

@@ -427,7 +427,7 @@ SELECT * FROM v_ready_for_consensus WHERE track = 'residential';
 
 ## Current Status
 
-> **⚠️ LIVE COUNTS:** Run `python3 iecc_preflight.py` to get current counts (decided, pending, withdrawn, CA, SA, DQ). For a human-readable summary, see `IECC_STATUS_REPORT.md`. Do NOT hardcode counts in docs — they go stale fast.
+> **⚠️ LIVE COUNTS:** Run `python3 iecc_preflight.py` to get current counts (decided, pending, withdrawn, CA, SA, DQ). See `CHANGELOG.md` for version history. Do NOT hardcode counts in docs — they go stale fast.
 
 ### Key Dates
 | Milestone | Date |
@@ -563,9 +563,10 @@ SELECT * FROM v_multi_action_proposals ORDER BY canonical_id, sequence;
 | `AGENT_GUIDE.md` | **THIS FILE** — Schema, naming traps, queries, verification protocol |
 | `PROJECT_MEMORY.md` | Session history and decisions log |
 | `iecc.db` | Unified database (SQLite) — all tables have `track` column |
-| `QUERY_COOKBOOK.md` | Ready-to-use SQL queries |
-| `PORTAL_ROADMAP.md` | Three-phase portal improvement plan |
-| `IECC_STATUS_REPORT.md` | Combined status report — both commercial and residential |
+| `docs/QUERY_COOKBOOK.md` | Ready-to-use SQL queries |
+| `docs/PORTAL_ROADMAP.md` | Three-phase portal improvement plan |
+| `CONTRIBUTING.md` | How to contribute — rules, workflow, patterns |
+| `CHANGELOG.md` | Version history by session |
 
 ### Tools
 | File | Purpose |

@@ -1,6 +1,6 @@
 # CLAUDE.md — Agent Quick Start
 
-## ⚡ "Run Startup" — Do This First
+## "Run Startup" — Do This First
 
 When Alex says **"run startup"**, execute the full onboarding sequence:
 
@@ -9,7 +9,7 @@ python3 iecc_startup.py
 ```
 
 This script automatically:
-1. Inventories all project documentation (8 files, ~2600 lines)
+1. Inventories all project documentation
 2. Verifies database health (proposals, actions, meetings, circ forms)
 3. Starts the web server and tests all key routes
 4. Reports a comprehensive status summary
@@ -25,8 +25,8 @@ Read these files IN THIS ORDER. Do not skip any.
 1. **This file** (`CLAUDE.md`) — you're here, hard rules and structure
 2. **`AGENT_GUIDE.md`** — database schema, domain knowledge, ICC lifecycle, document chain, naming conventions. This is the most important file. It tells you who Alex is, what the ICC process is, how proposals flow, and what every table/column means.
 3. **`PROJECT_MEMORY.md`** — full session history, decisions made, known issues. Read at least the last 3 session entries and the Known Issues sections.
-4. **`QUERY_COOKBOOK.md`** — ready-to-use SQL queries (reference — skim for patterns)
-5. **`PORTAL_ROADMAP.md`** — three-phase portal plan. Phase 1 mostly complete (Session 29).
+4. **`docs/QUERY_COOKBOOK.md`** — ready-to-use SQL queries (reference — skim for patterns)
+5. **`docs/PORTAL_ROADMAP.md`** — three-phase portal plan. Phase 1 mostly complete (Session 29).
 6. **`web/DEVELOPMENT.md`** — web app: rules, architecture, what's built, what's next, testing checklist, code patterns
 7. **`web/README.md`** + **`web/ARCHITECTURE.md`** — setup, file structure, request lifecycle
 
@@ -50,13 +50,21 @@ After reading all docs, tell Alex: **"I've completed startup and read all projec
 ## Project Structure
 
 ```
-IECC/
+IECC_PORTAL/
 ├── iecc.db                    # THE database (SQLite, WAL mode)
+├── CLAUDE.md                  # THIS FILE — hard rules and structure
 ├── AGENT_GUIDE.md             # Schema, domain knowledge (READ THIS)
 ├── PROJECT_MEMORY.md          # Session history (READ THIS)
-├── CLAUDE.md                  # THIS FILE — hard rules and structure
-├── QUERY_COOKBOOK.md           # Ready SQL queries
-├── PORTAL_ROADMAP.md          # Three-phase portal improvement plan
+├── CONTRIBUTING.md            # How to contribute (rules, workflow, patterns)
+├── CHANGELOG.md               # Version history by session
+├── LICENSE                    # MIT license
+│
+├── docs/                      # Reference documentation
+│   ├── QUERY_COOKBOOK.md       # Ready SQL queries
+│   ├── PORTAL_ROADMAP.md      # Three-phase portal improvement plan
+│   ├── SKILLS_DEVELOPMENT.md  # Cowork skills architecture
+│   ├── PROPOSAL_LANGUAGE_EXTRACTION.md  # Content extraction methodology
+│   └── IECC_SHAREPOINT_STRUCTURE.md     # SharePoint folder audit
 │
 ├── iecc_preflight.py          # DB health check (quick)
 ├── iecc_startup.py            # FULL startup script (docs + DB + server)
@@ -70,9 +78,9 @@ IECC/
 ├── skills-update/             # Updated skill files (copy to Windows between sessions)
 ├── migrations/                # SQL migration files
 │
-├── ARCHIVES/                  # Commercial source data, backups, JSON files
-├── 2027_RESIDENTIAL/          # Residential source data (circ forms, minutes, agendas)
-├── IECC standard/             # ICC process docs, forms, presentations
+├── .github/                   # GitHub templates
+│   ├── ISSUE_TEMPLATE/        # Bug report + feature request templates
+│   └── PULL_REQUEST_TEMPLATE.md
 │
 └── web/                       # FastAPI web application
     ├── DEVELOPMENT.md         # Web app: rules, architecture, what's built, what's next

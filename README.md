@@ -1,8 +1,14 @@
 # IECC Portal — ICC Code Development Platform
 
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-009688.svg)](https://fastapi.tiangolo.com)
+[![SQLite](https://img.shields.io/badge/SQLite-WAL_mode-003B57.svg)](https://sqlite.org)
+[![HTMX](https://img.shields.io/badge/HTMX-dynamic_UI-3366CC.svg)](https://htmx.org)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 A web-based platform for managing the **2027 International Energy Conservation Code (IECC)** development process. Built for the ICC Secretariat to track **510 code change proposals** across commercial and residential tracks — from submission through subgroup review, consensus committee voting, and final disposition.
 
-> **Status:** Active internal tool in daily use. 34 development sessions completed.
+> **Status:** Active internal tool. 34 development sessions completed.
 
 ---
 
@@ -61,9 +67,7 @@ python main.py          # Any platform
 start.bat               # Windows — double-click to launch
 ```
 
-The app runs at **http://localhost:8080**. Log in with any preset user account.
-
-The SQLite database (`iecc.db`) must be built separately using the data pipeline scripts — it contains live proposal data and is not committed to the repo.
+The app runs at **http://localhost:8080**. Log in with any preset user account (17 accounts: 3 secretariat, 14 chairs).
 
 ---
 
@@ -88,6 +92,13 @@ IECC_PORTAL/
 │   ├── static/                     # CSS (main + Go Live), HTMX, favicon
 │   └── db/                         # Connection manager + all SQL queries
 │
+├── docs/                           # Reference documentation
+│   ├── PORTAL_ROADMAP.md           # Three-phase development plan
+│   ├── QUERY_COOKBOOK.md            # Ready-to-use SQL query patterns
+│   ├── PROPOSAL_LANGUAGE_EXTRACTION.md
+│   ├── IECC_SHAREPOINT_STRUCTURE.md
+│   └── SKILLS_DEVELOPMENT.md
+│
 ├── iecc_startup.py                 # Full startup: docs + DB health + server test
 ├── iecc_preflight.py               # Quick DB verification
 ├── iecc_query.py                   # CLI query tool
@@ -97,13 +108,7 @@ IECC_PORTAL/
 ├── populate_content.py             # DOCX→DB proposal text extraction pipeline
 │
 ├── reference/                      # ICC governance policies (JSON)
-├── migrations/                     # SQL schema migrations
-│
-├── AGENT_GUIDE.md                  # Database schema, domain knowledge, ICC lifecycle
-├── PORTAL_ROADMAP.md               # Three-phase development plan
-├── QUERY_COOKBOOK.md                # Ready-to-use SQL query patterns
-├── PROJECT_MEMORY.md               # Full 34-session development history
-└── CLAUDE.md                       # AI agent operating instructions
+└── migrations/                     # SQL schema migrations
 ```
 
 ---
@@ -161,7 +166,7 @@ This platform manages steps 2-5, replacing spreadsheets and manual document asse
 
 ## Development Status
 
-Three-phase roadmap (see [`PORTAL_ROADMAP.md`](PORTAL_ROADMAP.md)):
+Three-phase roadmap (see [`docs/PORTAL_ROADMAP.md`](docs/PORTAL_ROADMAP.md)):
 
 | Phase | Description | Status |
 |-------|-------------|--------|
@@ -181,12 +186,15 @@ Three-phase roadmap (see [`PORTAL_ROADMAP.md`](PORTAL_ROADMAP.md)):
 
 | Document | Purpose |
 |----------|---------|
+| [`CLAUDE.md`](CLAUDE.md) | AI agent operating instructions and hard rules |
 | [`AGENT_GUIDE.md`](AGENT_GUIDE.md) | Full database schema, naming conventions, ICC lifecycle |
-| [`PORTAL_ROADMAP.md`](PORTAL_ROADMAP.md) | Three-phase development plan with current status |
-| [`QUERY_COOKBOOK.md`](QUERY_COOKBOOK.md) | Ready-to-use SQL query patterns |
 | [`PROJECT_MEMORY.md`](PROJECT_MEMORY.md) | Full 34-session development history |
-| [`web/ARCHITECTURE.md`](web/ARCHITECTURE.md) | Technical deep dive: request lifecycle, auth, HTMX patterns |
+| [`CONTRIBUTING.md`](CONTRIBUTING.md) | How to contribute — rules, workflow, patterns |
+| [`CHANGELOG.md`](CHANGELOG.md) | Version history by development session |
+| [`docs/PORTAL_ROADMAP.md`](docs/PORTAL_ROADMAP.md) | Three-phase development plan with current status |
+| [`docs/QUERY_COOKBOOK.md`](docs/QUERY_COOKBOOK.md) | Ready-to-use SQL query patterns |
 | [`web/DEVELOPMENT.md`](web/DEVELOPMENT.md) | Web app: rules, what's built, what's next, testing, code patterns |
+| [`web/ARCHITECTURE.md`](web/ARCHITECTURE.md) | Technical deep dive: request lifecycle, auth, HTMX patterns |
 
 ## Environment Variables
 
@@ -200,4 +208,4 @@ Three-phase roadmap (see [`PORTAL_ROADMAP.md`](PORTAL_ROADMAP.md)):
 
 ## License
 
-This project is proprietary to the International Code Council's code development process.
+This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.

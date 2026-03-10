@@ -158,10 +158,10 @@ User clicks login → sets cookie → middleware reads cookie on every request
 Upload service is built but dormant. Requires Azure AD app with `Sites.ReadWrite.All` and env vars `SP_TENANT_ID`, `SP_CLIENT_ID`, `SP_CLIENT_SECRET`. See `services/sharepoint.py`.
 
 ### Priority 2: "Further Modified" / Combined Consideration
-Portal can't capture: further modifications (mod rejected, new one crafted live), combined consideration, superseded proposals, mid-meeting withdrawals. See `PORTAL_ROADMAP.md` Phase 2, Step 6.
+Portal can't capture: further modifications (mod rejected, new one crafted live), combined consideration, superseded proposals, mid-meeting withdrawals. See `docs/PORTAL_ROADMAP.md` Phase 2, Step 6.
 
 ### Priority 3: Transcript Extraction
-`meeting_events` table exists but is empty. Plan: upload DOCX transcript → LLM extracts structured data → review → import. See `PORTAL_ROADMAP.md` Phase 3, Step 9.
+`meeting_events` table exists but is empty. Plan: upload DOCX transcript → LLM extracts structured data → review → import. See `docs/PORTAL_ROADMAP.md` Phase 3, Step 9.
 
 ### Priority 4: Meeting Prep Dashboard
 Pre-meeting view showing content readiness per proposal. Not yet built.
