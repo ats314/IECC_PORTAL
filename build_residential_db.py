@@ -1126,7 +1126,7 @@ def create_views(conn):
             WHEN p.phase = 'PUBLIC_INPUT' THEN 'PHASE_CLOSED'
             WHEN sa.recommendation IS NOT NULL THEN 'PENDING_CONSENSUS'
             ELSE 'PENDING'
-        END AS computed_status
+        END AS status
     FROM proposals p
     LEFT JOIN (
         SELECT *, ROW_NUMBER() OVER (PARTITION BY proposal_uid ORDER BY action_date DESC, id DESC) AS rn
@@ -1262,7 +1262,7 @@ def verify_db(conn):
 
     # Status summary
     print("\n  Status summary:")
-    for row in c.execute("SELECT computed_status, COUNT(*) FROM v_current_status GROUP BY computed_status ORDER BY computed_status"):
+    for row in c.execute("SELECT status, COUNT(*) FROM v_current_status GROUP BY status ORDER BY status"):
         print(f"    {row[0]:25s}: {row[1]:3d}")
 
     # Subgroup action recommendations

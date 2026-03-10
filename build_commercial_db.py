@@ -1115,7 +1115,7 @@ def create_views(conn):
             WHEN ca.recommendation IS NOT NULL THEN 'DECIDED'
             WHEN sa.recommendation IS NOT NULL THEN 'PENDING_CONSENSUS'
             ELSE 'NO_ACTION'
-        END AS computed_status
+        END AS status
     FROM proposals p
     LEFT JOIN subgroup_actions sa ON p.proposal_uid = sa.proposal_uid
     LEFT JOIN consensus_actions ca ON p.proposal_uid = ca.proposal_uid AND ca.is_final = 1
@@ -1239,7 +1239,7 @@ def verify(conn):
     # Status breakdown
     print("\nStatus breakdown:")
     statuses = c.execute("""
-        SELECT computed_status, COUNT(*) FROM v_current_status GROUP BY computed_status ORDER BY computed_status
+        SELECT status, COUNT(*) FROM v_current_status GROUP BY status ORDER BY status
     """).fetchall()
     for status, cnt in statuses:
         print(f"  {status}: {cnt}")
