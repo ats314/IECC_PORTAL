@@ -186,8 +186,7 @@ Three-phase roadmap (see [`PORTAL_ROADMAP.md`](PORTAL_ROADMAP.md)):
 | [`QUERY_COOKBOOK.md`](QUERY_COOKBOOK.md) | Ready-to-use SQL query patterns |
 | [`PROJECT_MEMORY.md`](PROJECT_MEMORY.md) | Full 34-session development history |
 | [`web/ARCHITECTURE.md`](web/ARCHITECTURE.md) | Technical deep dive: request lifecycle, auth, HTMX patterns |
-| [`web/DEVELOPMENT.md`](web/DEVELOPMENT.md) | What's built, what's next, known issues |
-| [`web/LLM_HANDOFF.md`](web/LLM_HANDOFF.md) | Web app rules and patterns for AI-assisted development |
+| [`web/DEVELOPMENT.md`](web/DEVELOPMENT.md) | Web app: rules, what's built, what's next, testing, code patterns |
 
 ## Environment Variables
 

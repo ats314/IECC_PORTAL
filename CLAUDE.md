@@ -9,7 +9,7 @@ python3 iecc_startup.py
 ```
 
 This script automatically:
-1. Inventories all project documentation (9 files, ~2900 lines)
+1. Inventories all project documentation (8 files, ~2600 lines)
 2. Verifies database health (proposals, actions, meetings, circ forms)
 3. Starts the web server and tests all key routes
 4. Reports a comprehensive status summary
@@ -27,9 +27,8 @@ Read these files IN THIS ORDER. Do not skip any.
 3. **`PROJECT_MEMORY.md`** — full session history, decisions made, known issues. Read at least the last 3 session entries and the Known Issues sections.
 4. **`QUERY_COOKBOOK.md`** — ready-to-use SQL queries (reference — skim for patterns)
 5. **`PORTAL_ROADMAP.md`** — three-phase portal plan. Phase 1 mostly complete (Session 29).
-6. **`web/LLM_HANDOFF.md`** — web app handoff: rules, patterns, what's built, what to build next
-7. **`web/DEVELOPMENT.md`** — what's done, what's NOT done, current priorities
-8. **`web/README.md`** + **`web/ARCHITECTURE.md`** — setup, file structure, request lifecycle
+6. **`web/DEVELOPMENT.md`** — web app: rules, architecture, what's built, what's next, testing checklist, code patterns
+7. **`web/README.md`** + **`web/ARCHITECTURE.md`** — setup, file structure, request lifecycle
 
 After reading all docs, tell Alex: **"I've completed startup and read all project docs. Ready to work."**
 
@@ -76,10 +75,9 @@ IECC/
 ├── IECC standard/             # ICC process docs, forms, presentations
 │
 └── web/                       # FastAPI web application
-    ├── LLM_HANDOFF.md         # START HERE for web work
+    ├── DEVELOPMENT.md         # Web app: rules, architecture, what's built, what's next
     ├── README.md              # Setup, file structure
     ├── ARCHITECTURE.md        # Technical deep dive
-    ├── DEVELOPMENT.md         # What's built, what's next
     ├── main.py                # App entry point
     ├── config.py              # Constants + SharePoint config
     ├── start.bat              # Windows launcher (port 8080)

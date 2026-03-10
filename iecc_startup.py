@@ -36,10 +36,9 @@ DOCS = [
     ("PROJECT_MEMORY.md", "Session history, decisions, known issues"),
     ("QUERY_COOKBOOK.md", "Ready SQL queries"),
     ("PORTAL_ROADMAP.md", "Three-phase portal plan (Phase 1 mostly complete)"),
-    ("web/LLM_HANDOFF.md", "Web app handoff — rules, patterns, what to build next"),
+    ("web/DEVELOPMENT.md", "Web app: rules, architecture, what's built, what's next, testing, code patterns"),
     ("web/README.md", "Web app setup, file structure"),
     ("web/ARCHITECTURE.md", "Request lifecycle, auth system, template inheritance"),
-    ("web/DEVELOPMENT.md", "What's built, what's NOT built, priorities"),
 ]
 
 # Server routes to verify

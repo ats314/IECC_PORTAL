@@ -960,8 +960,8 @@ All other Session 6–9 issues (governance tables, SG action gaps, vote/reason c
 **Actions:**
 - **Full code health audit** of the web application. Ran comprehensive codebase review covering routes, templates, database queries, config, static files, dependencies, and auth/role enforcement. Found one bug (`meeting_docs.py` using `user.get("username")` instead of `user.get("name")`). Fixed immediately.
 - **Comprehensive documentation update** — brought all 8 project docs up to date with reality:
-  - **DEVELOPMENT.md** — Marked Go Live, Meeting Documents, Centralized Content, and 14 chair accounts as DONE. Reprioritized "What's NOT Built" to focus on: Further Modified workflow, Transcript Extraction, Meeting Prep Dashboard. Removed stale Priority 2 (Go Live) and Priority 5 (More Chair Accounts) that were already completed.
-  - **LLM_HANDOFF.md** — Rewrote "What Alex Will Likely Ask" section to separate completed features (Go Live, meeting docs, 14 chair accounts, rich text + content) from actual future work. Added `meeting_docs.py` and Go Live partials to key files tables. Added Go Live and document upload to testing checklist.
+  - **DEVELOPMENT.md** — Complete rewrite. Merged LLM_HANDOFF.md content (critical rules, architecture reference, key files table, testing checklist, code patterns) into DEVELOPMENT.md to eliminate redundancy. Marked Go Live, Meeting Documents, Content Database, and 14 chair accounts as DONE. Reprioritized roadmap.
+  - **LLM_HANDOFF.md** — DELETED. Content merged into DEVELOPMENT.md. Having two overlapping web dev docs with conflicting reading orders caused confusion for new agents.
   - **PORTAL_ROADMAP.md** — Updated Phase 1 status to use DB query instead of hardcoded count. Updated Phase 2 status to note Go Live completion.
   - **AGENT_GUIDE.md** — Updated session date to Session 34. Added `meeting_documents` table to Web App Tables schema section.
   - **web/ARCHITECTURE.md** — Added `meeting_documents` table to Tables Created section. Added Go Live and document routes to Route Access Matrix.
@@ -974,8 +974,8 @@ All other Session 6–9 issues (governance tables, SG action gaps, vote/reason c
 
 **Files modified:**
 - `web/routes/meeting_docs.py` — Fixed `user.get("username")` → `user.get("name")`
-- `web/DEVELOPMENT.md` — Major update: marked completed features, reprioritized roadmap
-- `web/LLM_HANDOFF.md` — Rewrote future work section, added Go Live + meeting docs to tables/checklists
+- `web/DEVELOPMENT.md` — Complete rewrite merging LLM_HANDOFF.md content: rules, architecture, key files, testing checklist, code patterns, plus marked completed features and reprioritized roadmap
+- `web/LLM_HANDOFF.md` — DELETED (merged into DEVELOPMENT.md)
 - `web/ARCHITECTURE.md` — Added meeting_documents table, Go Live routes
 - `web/README.md` — Added Go Live, meeting docs, updated user accounts
 - `PORTAL_ROADMAP.md` — Updated phase status markers
@@ -984,7 +984,7 @@ All other Session 6–9 issues (governance tables, SG action gaps, vote/reason c
 - `README.md` — Complete rewrite for GitHub
 
 **State changes propagated:**
-- [x] All 8 documentation files updated
+- [x] All documentation files updated (LLM_HANDOFF.md merged into DEVELOPMENT.md and deleted)
 - [x] Bug fix committed (meeting_docs.py)
 - [x] Known issues — no new issues; no issues resolved
 
@@ -1017,9 +1017,8 @@ Copy and fill this in at the end of every session (or use the iecc-session-close
 
 **State changes propagated:**
 - [ ] PROJECT_MEMORY.md — this entry
-- [ ] DEVELOPMENT.md — feature status updated?
+- [ ] DEVELOPMENT.md — feature status or web patterns changed?
 - [ ] AGENT_GUIDE.md — schema/views/domain knowledge changed?
-- [ ] LLM_HANDOFF.md — web patterns/rules changed?
 - [ ] CLAUDE.md — project structure changed?
 - [ ] skills-update/ — any IECC skills updated? (list which ones)
 - [ ] Known issues added/resolved below?
