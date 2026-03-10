@@ -27,10 +27,54 @@
         <span class="gl-clock" id="gl-clock"></span>
     </div>
     <div class="gl-navbar-actions">
+        {% if meeting_docs %}
+        <button class="gl-btn gl-docs-btn" onclick="toggleDocViewer()" title="View meeting documents">
+            &#x1F4C4; Documents ({{ meeting_docs|length }})
+        </button>
+        {% endif %}
         <button class="gl-btn" onclick="toggleFullscreen()" title="Toggle fullscreen">&#x26F6; Fullscreen</button>
         <a href="/meeting/{{ meeting.id }}/portal" class="gl-btn">Exit Go Live</a>
     </div>
 </nav>
+
+<!-- ==================== DOCUMENT VIEWER OVERLAY ==================== -->
+{% if meeting_docs %}
+<div class="gl-doc-overlay" id="gl-doc-overlay">
+    <div class="gl-doc-viewer">
+        <div class="gl-doc-header">
+            <div class="gl-doc-selector">
+                <label>Document:</label>
+                <select id="gl-doc-select" onchange="loadDocument(this.value)">
+                    <option value="">Select a document...</option>
+                    {% for doc in meeting_docs %}
+                    <option value="/meeting/{{ meeting.id }}/documents/{{ doc.id }}/view"
+                            data-name="{{ doc.display_name }}"
+                            data-mime="{{ doc.mime_type }}">
+                        {{ doc.display_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="gl-doc-actions">
+                <button class="gl-btn" onclick="openDocExternal()" id="gl-doc-external" style="display:none;" title="Open in new tab">
+                    &#x2197; New Tab
+                </button>
+                <button class="gl-btn gl-doc-close-btn" onclick="toggleDocViewer()">
+                    &#x2715; Close
+                </button>
+            </div>
+        </div>
+        <div class="gl-doc-frame-wrap" id="gl-doc-frame-wrap">
+            <div class="gl-doc-empty" id="gl-doc-empty">
+                <div style="font-size: 3rem; margin-bottom: 1rem;">&#x1F4C4;</div>
+                <p>Select a document from the dropdown above</p>
+            </div>
+            <iframe id="gl-doc-frame" class="gl-doc-frame" style="display:none;"></iframe>
+            <img id="gl-doc-img" class="gl-doc-img" style="display:none;">
+        </div>
+    </div>
+</div>
+{% endif %}
 
 <!-- ==================== MAIN ==================== -->
 <div class="gl-main">
@@ -472,6 +516,65 @@
         var pane = document.getElementById('tab-' + paneId);
         if (pane) pane.classList.add('active');
     };
+
+    // === DOCUMENT VIEWER ===
+    var docViewerOpen = false;
+    var currentDocUrl = '';
+
+    window.toggleDocViewer = function() {
+        var overlay = document.getElementById('gl-doc-overlay');
+        if (!overlay) return;
+        docViewerOpen = !docViewerOpen;
+        overlay.classList.toggle('visible', docViewerOpen);
+        // When closing, don't unload — keep last doc loaded for quick re-open
+    };
+
+    window.loadDocument = function(url) {
+        var frame = document.getElementById('gl-doc-frame');
+        var img = document.getElementById('gl-doc-img');
+        var empty = document.getElementById('gl-doc-empty');
+        var extBtn = document.getElementById('gl-doc-external');
+        var select = document.getElementById('gl-doc-select');
+
+        if (!url) {
+            frame.style.display = 'none';
+            img.style.display = 'none';
+            empty.style.display = 'block';
+            extBtn.style.display = 'none';
+            currentDocUrl = '';
+            return;
+        }
+
+        currentDocUrl = url;
+        empty.style.display = 'none';
+        extBtn.style.display = 'inline-block';
+
+        // Check if it's an image by mime type from selected option
+        var opt = select.options[select.selectedIndex];
+        var mime = opt ? opt.dataset.mime : '';
+
+        if (mime && mime.startsWith('image/')) {
+            frame.style.display = 'none';
+            img.style.display = 'block';
+            img.src = url;
+        } else {
+            img.style.display = 'none';
+            frame.style.display = 'block';
+            frame.src = url;
+        }
+    };
+
+    window.openDocExternal = function() {
+        if (currentDocUrl) window.open(currentDocUrl, '_blank');
+    };
+
+    // Escape key closes doc viewer
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && docViewerOpen) {
+            toggleDocViewer();
+            e.preventDefault();
+        }
+    });
 
     // === AUTO-ADVANCE AFTER STAGING ===
     document.body.addEventListener('htmx:afterSwap', function(evt) {

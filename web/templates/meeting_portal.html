@@ -252,6 +252,81 @@
 </details>
 {% endif %}
 
+<!-- ==================== MEETING DOCUMENTS ==================== -->
+<details class="card" style="margin-bottom: 1.5rem;" id="documents-section" {% if meeting_docs %}open{% endif %}>
+    <summary class="details-summary">
+        <strong>Meeting Documents</strong>
+        {% if meeting_docs %}
+        <span class="badge badge-decided" style="margin-left: 0.5rem;">{{ meeting_docs|length }}</span>
+        {% endif %}
+    </summary>
+
+    <div style="margin-top: 0.75rem;">
+        {% if meeting_docs %}
+        <table class="data-table" style="margin-bottom: 1rem;">
+            <thead>
+                <tr>
+                    <th>Document</th>
+                    <th>Type</th>
+                    <th>Size</th>
+                    <th style="width: 160px;"></th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for doc in meeting_docs %}
+            <tr>
+                <td>
+                    <strong style="color: var(--text-bright);">{{ doc.display_name }}</strong>
+                    <br><span class="text-muted text-xs">{{ doc.file_name }}</span>
+                </td>
+                <td class="text-sm text-muted">
+                    {% if doc.mime_type and 'pdf' in doc.mime_type %}PDF
+                    {% elif doc.mime_type and 'image' in doc.mime_type %}Image
+                    {% else %}File{% endif %}
+                </td>
+                <td class="text-sm text-muted">
+                    {% if doc.file_size %}
+                        {% if doc.file_size > 1048576 %}{{ (doc.file_size / 1048576)|round(1) }} MB
+                        {% else %}{{ (doc.file_size / 1024)|round(0)|int }} KB{% endif %}
+                    {% endif %}
+                </td>
+                <td class="action-btns">
+                    <a href="/meeting/{{ meeting.id }}/documents/{{ doc.id }}/view" target="_blank" class="btn btn-xs btn-primary">Preview</a>
+                    {% if not is_completed %}
+                    <form method="POST" action="/meeting/{{ meeting.id }}/documents/{{ doc.id }}/delete" style="display: inline;"
+                          onsubmit="return confirm('Delete {{ doc.display_name }}?')">
+                        <button type="submit" class="btn btn-danger btn-xs">&times;</button>
+                    </form>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="text-muted" style="margin-bottom: 1rem;">No documents uploaded yet. Upload PDFs or images to display during the meeting.</p>
+        {% endif %}
+
+        {% if not is_completed %}
+        <form method="POST" action="/meeting/{{ meeting.id }}/documents/upload"
+              enctype="multipart/form-data" class="doc-upload-form">
+            <div style="display: flex; gap: 0.75rem; align-items: flex-end; flex-wrap: wrap;">
+                <div class="form-group" style="margin-bottom: 0; flex: 1; min-width: 200px;">
+                    <label class="form-label">Display Name (optional)</label>
+                    <input type="text" name="display_name" class="form-input" placeholder="e.g. ASHRAE Table R405.5.2">
+                </div>
+                <div class="form-group" style="margin-bottom: 0; flex: 1; min-width: 200px;">
+                    <label class="form-label">File (PDF or Image, max 25 MB)</label>
+                    <input type="file" name="file" accept=".pdf,.png,.jpg,.jpeg,.gif,.bmp,.svg" required
+                           class="form-input" style="padding: 0.35rem;">
+                </div>
+                <button type="submit" class="btn btn-primary" style="white-space: nowrap;">Upload Document</button>
+            </div>
+        </form>
+        {% endif %}
+    </div>
+</details>
+
 <!-- ==================== ACTION ENTRY (one at a time) ==================== -->
 {% set needs_action = [] %}
 {% for item in agenda if not item.staged_action %}

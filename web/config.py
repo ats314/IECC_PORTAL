@@ -123,6 +123,23 @@ except (PermissionError, OSError):
 GENERATED_DIR = _default_gen_dir
 CIRCFORMS_DIR = GENERATED_DIR / "circforms"
 
+# Meeting document uploads
+_default_uploads_dir = _web_dir / "uploads" / "meeting_docs"
+try:
+    _default_uploads_dir.mkdir(parents=True, exist_ok=True)
+    (_default_uploads_dir / ".test").touch()
+    (_default_uploads_dir / ".test").unlink()
+except (PermissionError, OSError):
+    import tempfile
+    _default_uploads_dir = Path(tempfile.gettempdir()) / "iecc_meeting_docs"
+    _default_uploads_dir.mkdir(parents=True, exist_ok=True)
+
+MEETING_DOCS_DIR = _default_uploads_dir
+
+# Allowed file types for meeting document uploads
+ALLOWED_DOC_EXTENSIONS = {".pdf", ".png", ".jpg", ".jpeg", ".gif", ".bmp", ".svg"}
+MAX_DOC_SIZE_MB = 25
+
 
 def resolve_subgroup(body: str) -> str:
     """Convert a meeting body name to the proposal subgroup name used in the DB."""

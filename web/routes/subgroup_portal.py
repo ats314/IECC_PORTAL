@@ -136,6 +136,13 @@ def _load_portal_data(meeting_id: int) -> dict:
             (meeting["body"],)
         ).fetchall()]
 
+    # Load meeting documents for reference display
+    with get_db() as conn:
+        meeting_docs = [dict(r) for r in conn.execute(
+            "SELECT * FROM meeting_documents WHERE meeting_id = ? ORDER BY sort_order, uploaded_at",
+            (meeting_id,)
+        ).fetchall()]
+
     return {
         "meeting": meeting,
         "agenda": agenda,
@@ -146,6 +153,7 @@ def _load_portal_data(meeting_id: int) -> dict:
         "has_modifications": has_modifications,
         "committed_actions": committed_actions,
         "members": members,
+        "meeting_docs": meeting_docs,
     }
 
 

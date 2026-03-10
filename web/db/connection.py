@@ -200,6 +200,24 @@ def init_schema():
         """)
 
         conn.execute("""
+            CREATE TABLE IF NOT EXISTS meeting_documents (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                meeting_id INTEGER NOT NULL REFERENCES meetings(id),
+                display_name TEXT NOT NULL,
+                file_name TEXT NOT NULL,
+                file_path TEXT NOT NULL,
+                file_size INTEGER,
+                mime_type TEXT,
+                sort_order INTEGER NOT NULL DEFAULT 0,
+                uploaded_at TEXT DEFAULT (datetime('now')),
+                uploaded_by TEXT,
+                UNIQUE(meeting_id, file_name)
+            )
+        """)
+
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_meeting_documents_meeting ON meeting_documents(meeting_id)")
+
+        conn.execute("""
             CREATE TABLE IF NOT EXISTS meeting_events (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 meeting_id INTEGER NOT NULL REFERENCES meetings(id),

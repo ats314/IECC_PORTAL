@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 # Ensure the web directory is in the path for imports
 sys.path.insert(0, str(Path(__file__).parent))
 
-from routes import auth, dashboard, proposals, meetings, subgroup_portal, exports, circforms
+from routes import auth, dashboard, proposals, meetings, subgroup_portal, exports, circforms, meeting_docs
 from db.connection import init_schema
 
 
@@ -118,6 +118,7 @@ app.include_router(meetings.router)
 app.include_router(subgroup_portal.router)
 app.include_router(exports.router)
 app.include_router(circforms.router)
+app.include_router(meeting_docs.router)
 
 
 @app.get("/health")
