@@ -56,7 +56,9 @@ HTML Response
 | `/home` | **Blocked → /** | Yes | **→ /login** |
 | `/meeting/*/portal` | Yes | Yes | **→ /login** |
 | `/meeting/*/review` | Yes | Yes | **→ /login** |
+| `/meeting/*/go-live` | Yes | Yes | **→ /login** |
 | `/meeting/*/export-*` | Yes | Yes | **→ /login** |
+| `/meeting/*/documents/*` | Yes | Yes | **→ /login** |
 | `/meeting/*/stage` | Yes | Yes | **→ /login** |
 
 ## Template Inheritance
@@ -118,6 +120,7 @@ The web app reads from the main `iecc.db` (one dir up). It does NOT create its o
 | `sg_action_staging` | Temporary staging during a meeting | `subgroup_portal.py._ensure_tables()` |
 | `meeting_agenda_items` | Agenda order for a meeting | `subgroup_portal.py._ensure_tables()` |
 | `circ_forms` | Circ form document lifecycle (pending_review → approved/uploaded → rejected) | `circforms.py._ensure_circ_forms_table()` |
+| `meeting_documents` | Uploaded PDFs/images for Go Live display | `db/connection.py` schema init |
 
 `sg_action_staging` and `meeting_agenda_items` are created with `CREATE TABLE IF NOT EXISTS` on first portal access. They use `UNIQUE(meeting_id, proposal_uid)` constraints.
 

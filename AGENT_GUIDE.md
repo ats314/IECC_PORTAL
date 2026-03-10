@@ -2,7 +2,7 @@
 
 > **READ THIS FIRST.** This document gives any AI agent full context to operate on this project immediately. No discovery phase needed.
 > **Single unified database: `iecc.db`** with `track` column ('commercial'/'residential') on all tables and views.
-> **Last Updated:** 2026-03-06 (Session 33)
+> **Last Updated:** 2026-03-10 (Session 34)
 
 ---
 
@@ -373,6 +373,7 @@ note TEXT, source_file TEXT,
 - **`sg_action_staging`** — Temporary staging area for meeting portal actions. Columns: `meeting_id`, `proposal_uid`, `recommendation`, `vote_for`, `vote_against`, `vote_not_voting`, `reason`, `modification_text`. Cleaned up when meeting is sent to secretariat.
 - **`meeting_agenda_items`** — Meeting agenda items. Columns: `meeting_id`, `proposal_uid`, `order_num`. Created during agenda auto-populate.
 - **`circ_forms`** — Circulation form document lifecycle tracking (Session 25). Columns: `meeting_id` (UNIQUE), `track`, `subgroup`, `body`, `generated_at`, `pdf_path` (absolute path to generated doc), `status` (`pending_review`/`approved`/`uploaded`/`rejected`), `reviewed_by`, `reviewed_at`, `sharepoint_url`, `rejection_reason`. Auto-created when chair sends meeting to secretariat.
+- **`meeting_documents`** — Uploaded reference documents for Go Live display (Session 34). Columns: `meeting_id`, `display_name`, `file_name`, `file_path`, `file_size`, `mime_type`, `sort_order`, `uploaded_by`, `uploaded_at`. Chairs upload PDFs/images to show during meetings.
 
 ### Centralized Content Tables (Session 29)
 

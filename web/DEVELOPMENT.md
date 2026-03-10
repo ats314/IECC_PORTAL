@@ -1,6 +1,6 @@
 # Development Guide — Current State & Next Steps
 
-> **Last updated:** 2026-03-05, Session 29
+> **Last updated:** 2026-03-10, Session 34
 
 ## What's DONE and Working
 
@@ -62,6 +62,33 @@
 - [x] User name + Sign Out in navbar for both portals
 - [x] SVG favicon for both portals
 
+### Go Live Presentation Mode (Session 29+)
+- [x] Full-screen presentation view at `/meeting/{id}/go-live` for Teams screen sharing
+- [x] Big text display — proposal ID, code section, proponent prominently visible
+- [x] Vote counter inputs with large +/- buttons for easy entry during meetings
+- [x] Quick-action buttons for common recommendations (Approve, Disapprove, etc.)
+- [x] Auto-advance to next proposal after recording an action
+- [x] Keyboard navigation (arrow keys to move between proposals)
+- [x] Timer/clock visible during meeting
+- [x] Proposal text and modification panels with ICC legislative markup
+- [x] Dedicated Go Live partials (`go_live_staged.html`, `go_live_unstaged.html`) for HTMX interactions
+- [x] Dedicated CSS (`go-live.css`, 15 KB) optimized for screen-share visibility
+
+### Meeting Documents (Session 34)
+- [x] Document upload for meetings at `/meeting/{id}/documents/upload` — chairs upload PDFs and images to display during Go Live
+- [x] Document management — rename, delete, reorder uploaded files
+- [x] Document viewer at `/meeting/{id}/documents/{id}/view` — serves files inline for Go Live display
+- [x] JSON API at `/meeting/{id}/documents/list` for HTMX/JS consumers
+- [x] `meeting_documents` DB table with sort ordering, MIME type detection, file size tracking
+- [x] File validation — extension whitelist, max size enforcement, safe filename generation
+
+### Centralized Content Database (Session 29-30)
+- [x] `proposal_text` table with extracted code language and ICC markup — query DB for current coverage
+- [x] `modifications` table with pre-submitted modification documents
+- [x] `proposal_links` table with auto-detected cross-references between related proposals
+- [x] `documents` table — registry of source files on disk
+- [x] `populate_content.py` pipeline — scans DOCX files, extracts text with `<ins>`/`<del>` markup, links proposals
+
 ### UI Polish (Session 23/24)
 - [x] Shared CSS utility classes in main.css (btn-group, btn-mods, btn-xs, btn-sm, text-sm, text-muted, breadcrumb, notes-tooltip) — removed duplication from individual template `<style>` blocks
 - [x] Breadcrumb navigation on review page
@@ -74,47 +101,44 @@
 ### Priority 1: SharePoint Azure AD Setup
 The SharePoint upload service is built but dormant. Alex needs to register an Azure AD app with `Sites.ReadWrite.All` permission and set `SP_TENANT_ID`, `SP_CLIENT_ID`, `SP_CLIENT_SECRET` environment variables. See `services/sharepoint.py` for details.
 
-### Priority 2: "Go Live" Meeting Mode
-Alex wants a presentation-friendly view for when the chair shares their screen on Teams during the meeting. Think of it as a simplified, focused view of the portal designed for visibility on a screen share.
+### Priority 2: "Further Modified" / Combined Consideration Workflow
+The portal needs to handle complex meeting actions that occur in practice:
+- **Approve as Further Modified** — original modification rejected, new one crafted live during the meeting
+- **Combined consideration** — two or more proposals heard together, linked in the record
+- **Superseded** — proposal disapproved because another proposal's modification covered it
+- **Withdrawal** — proposal withdrawn by proponent mid-meeting (no vote needed)
 
-**Requirements discussed:**
-- Current proposal prominently displayed (large text for code section, proponent)
-- Quick-action buttons for common recommendations
-- Big vote counter inputs
-- Auto-advance to next proposal after recording action
-- Timer/clock visible
-- Minimal chrome — maximize content visibility
+See `PORTAL_ROADMAP.md` Phase 2, Step 6 for the full spec.
 
-### Priority 3: Rich Text Modification Editor + Proposal Content — MOSTLY COMPLETE (Session 26 + 29)
-The Quill.js rich text editor is integrated into the portal. Chairs can use underline (additions) and strikethrough (deletions) when entering modification text, matching ICC markup conventions. HTML is stored in modification_text and renders properly in review pages, proposal detail, and Word document exports.
+### Priority 3: Transcript Extraction Pipeline
+The `meeting_events` table schema exists but is empty. The plan:
+- Upload DOCX meeting transcript after a meeting
+- LLM extracts structured data: proposals discussed, vote outcomes, reason statements, modifications, who moved/seconded
+- Present extraction for review and one-click import
+- See `PORTAL_ROADMAP.md` Phase 3, Step 9
 
-**Session 29 additions:** Centralized content database built. Proposals now have extracted code language with ICC legislative markup (`<ins>`/`<del>` tags) in the `proposal_text` table. The meeting portal shows proposal language panels, pre-submitted modification panels, cross-reference chips, and "Load into Editor" buttons that pre-populate the Quill editor with the actual proposal text. Query `SELECT COUNT(*) FROM proposal_text` for current coverage.
+### Priority 4: Meeting Prep Dashboard
+For an upcoming meeting, show: which proposals have text loaded, which have modifications, which are missing documents. One-click view of all linked/related proposals. See `PORTAL_ROADMAP.md` Phase 3, Step 12.
 
-**What's done:**
-- [x] Quill.js editor with toolbar (bold, underline, strikethrough, lists, clean), dark theme, HTMX integration
-- [x] HTML rendering in all display contexts, Word doc generators parse HTML into proper formatting
-- [x] Code language extraction — `populate_content.py` extracts from cdpACCESS DOCX files into `proposal_text` table (query DB for current coverage)
-- [x] Pre-loaded code language — "Load Original Proposal Text" button loads extracted text into Quill editor
-- [x] Pre-submitted modifications — "Load into Editor" button loads modification text and auto-sets recommendation to "Approved as Modified"
-- [x] Cross-reference chips — proposals modifying the same code section linked via `proposal_links` (auto-detected relationships)
-
-**What's NOT done yet:**
-1. **Coverage gap** — Not all proposals have extracted text. PUBLIC_INPUT phase proposals mostly lack DOCX files. Could backfill from monograph PDF.
-2. **"Go Live" mode** — the editor needs to be optimized for Teams screen sharing with bigger fonts and clearer markup visibility
-
-### Priority 4: cdpACCESS Integration
+### Priority 5: cdpACCESS Integration
 cdpACCESS is ICC's official code development platform. Currently the modification document export is a Word doc that staff manually reference when entering data into cdpACCESS. Direct API integration was discussed but deferred until Alex talks to the CDP team.
 
 **Short-term bridge (built):** Word document export that staff use as reference while entering into cdpACCESS manually.
-
-### Priority 5: More Chair Accounts
-Currently only Residential Modeling SG2 chairs (Brian Shanks, Robert Howard) exist. Need to add chairs for all subgroups across both tracks. The USERS dict in `routes/auth.py` is the place to add them.
 
 ### Priority 6: Consensus Committee Chair Portal
 A third role type for consensus committee chairs who manage the final hearing. Not yet designed.
 
 ### Future: Real Authentication
 Replace fake login with Microsoft SSO (all ICC staff are on Microsoft). The middleware pattern is already in place — just need to swap the cookie-based auth for real OAuth tokens.
+
+### ~~COMPLETED — Go Live Meeting Mode~~ (Session 29+)
+Full-screen presentation view built and working. See "What's DONE" section above.
+
+### ~~COMPLETED — More Chair Accounts~~ (Session 29+)
+14 chair accounts now exist covering all residential and commercial subgroups plus consensus committee chairs. See `routes/auth.py` USERS dict.
+
+### ~~COMPLETED — Rich Text Editor + Proposal Content~~ (Session 26-30)
+Quill.js editor, content extraction pipeline, cross-reference chips, proposal text pre-loading — all complete. See "What's DONE" section above. Remaining gap: ~65% of proposals lack extracted text (mostly PUBLIC_INPUT phase proposals without DOCX files on disk).
 
 ---
 

@@ -51,7 +51,7 @@ I read both meetings end-to-end — the Modeling SG2 meeting (March 3, 2026, ~2.
 
 ### Phase 1: Get Proposal Language Into the Portal (Weeks 1-2) — ✅ MOSTLY COMPLETE (Session 29-30)
 
-> **Status:** Steps 1-4 done. 178/510 proposals have extracted text with ICC markup. Portal pre-loads code language, modifications, and cross-references. 26% coverage gap remains (PUBLIC_INPUT phase proposals lack DOCX files).
+> **Status:** Steps 1-4 done. Query `SELECT COUNT(*) FROM proposal_text` for current coverage. Portal pre-loads code language, modifications, and cross-references. Coverage gap remains for PUBLIC_INPUT phase proposals that lack DOCX files on disk.
 
 This is the foundation. Everything else depends on chairs being able to see the actual proposal text in the portal instead of switching to cdpACCESS.
 
@@ -82,7 +82,7 @@ This is the foundation. Everything else depends on chairs being able to see the 
 
 ### Phase 2: Handle Modifications and Meeting Actions (Weeks 3-5) — PARTIALLY DONE
 
-> **Status:** Step 8 (cross-reference tracking) done — 258 auto-detected proposal links in DB, cross-reference chips in portal. Steps 5-7 partially done (modification ingestion built via populate_content.py, 102 modifications in DB, Quill editor loads them). Step 6 (meeting action capture redesign for "further modified" / combined consideration) NOT YET DONE.
+> **Status:** Step 8 (cross-reference tracking) done — 258 auto-detected proposal links in DB, cross-reference chips in portal. Steps 5-7 partially done (modification ingestion built via populate_content.py, modifications in DB, Quill editor loads them). Step 6 (meeting action capture redesign for "further modified" / combined consideration) NOT YET DONE. **Go Live presentation mode DONE** (Session 29+) — full-screen view with big text, vote counters, auto-advance, keyboard nav, document upload/display.
 
 This is where the portal starts doing real work during meetings.
 

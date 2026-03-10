@@ -75,6 +75,7 @@ User clicks login → sets cookie → middleware reads cookie on every request
 | `routes/helpers.py` | `render()` function — use this, not TemplateResponse directly |
 | `routes/subgroup_portal.py` | The entire chair meeting workflow (agenda, staging, review, send → auto-generates circ form) |
 | `routes/circforms.py` | Circ form review queue (secretariat-only): list, preview, download, approve, reject |
+| `routes/meeting_docs.py` | Meeting document upload/delete/rename/view — chairs upload PDFs/images for Go Live display |
 | `routes/dashboard.py` | Secretariat dashboard (in-progress meetings, pending circ forms, pending by subgroup, recent actions) |
 | `routes/meetings.py` | Meeting list, create, delete |
 | `routes/proposals.py` | Proposal list with filters, proposal detail |
@@ -89,6 +90,8 @@ User clicks login → sets cookie → middleware reads cookie on every request
 | `partials/action_saved.html` | Shown after staging an action — collapsed card with HTMX Edit button |
 | `partials/action_unstaged.html` | Shown after clicking Edit — pre-filled form for re-staging |
 | `partials/circform_row.html` | Circ form row after approve/reject — status badge swap |
+| `partials/go_live_staged.html` | Go Live version of action_saved — collapsed card for presentation mode |
+| `partials/go_live_unstaged.html` | Go Live version of action_unstaged — inline edit form for presentation mode |
 | `partials/proposal_rows.html` | Proposal table rows (HTMX target for filter updates) |
 
 **Template decision tree:**
@@ -123,44 +126,58 @@ Example: "Residential Modeling Subgroup" → "Modeling (SG2)" → "Modeling Subg
 
 ---
 
-## What Alex Will Likely Ask You To Build Next
+## What's Been Built Recently (Sessions 29-34)
 
-Based on conversations from Sessions 21+ (see PROJECT_MEMORY.md and PORTAL_ROADMAP.md for completion status):
+These features are DONE — don't rebuild them:
 
-### SharePoint Azure AD Setup
-Alex needs help setting up the Azure AD app registration to enable SharePoint upload. See the guide at the bottom of `services/sharepoint.py` or in the plan file. The portal works fully without it — the Approve button just skips the upload step.
+### Go Live Meeting Mode — DONE (Session 29+)
+Full-screen presentation view at `/meeting/{id}/go-live`. Big text for screen sharing, vote counters, quick-action buttons, auto-advance, keyboard navigation, timer. Uses dedicated template (`meeting_go_live.html`), CSS (`go-live.css`), and HTMX partials (`go_live_staged.html`, `go_live_unstaged.html`). Proposal text and modification panels render inside Go Live.
 
-### "Go Live" Meeting Mode
-A presentation-friendly view of the portal for Teams screen sharing. Big text, minimal UI, auto-advance through proposals. This is the most likely next request.
+### Meeting Documents — DONE (Session 34)
+Chairs upload PDFs and images to display during Go Live. Routes in `routes/meeting_docs.py`: upload, delete, rename, view, list (JSON). Files stored in `web/generated/meeting_docs/{meeting_id}/`. DB table: `meeting_documents`.
 
-### More Chair Users
-Only 2 chair accounts exist (Brian Shanks, Robert Howard — both Residential Modeling SG2). Alex will want chairs for all subgroups. Just add entries to the USERS dict in `routes/auth.py`.
+### 14 Chair Accounts — DONE (Session 29+)
+All subgroups across both tracks have chair accounts, plus consensus committee chairs. See `routes/auth.py` USERS dict.
 
-### Rich Text Modifications + Centralized Content — MOSTLY DONE (Session 26 + 29)
-Quill.js rich text editor is integrated. Chairs can use underline/strikethrough to mark additions/deletions. HTML stored in `modification_text` column. **Session 29:** Proposal text now pre-loads from the `proposal_text` table into the portal. Chairs see the actual code language with ICC markup, and can load it into Quill with one click. Cross-reference chips show related proposals. Pre-submitted modifications can be loaded directly into the editor. See `DEVELOPMENT.md` Priority 3 for details.
+### Rich Text Editor + Centralized Content — DONE (Session 26-30)
+Quill.js editor integrated. `proposal_text`, `modifications`, and `proposal_links` tables populated via `populate_content.py`. Portal batch-loads content for all agenda items.
 
-### Centralized Content Loading Pattern (Session 29 — NEW)
-The meeting portal now batch-loads content from three new tables for all agenda items:
+### Content Loading Pattern
+The meeting portal batch-loads content from three tables for all agenda items:
 ```python
-# In subgroup_portal.py meeting_portal():
+# In subgroup_portal.py _load_portal_data():
 uids = [item["proposal_uid"] for item in agenda]
 placeholders = ",".join("?" * len(uids))
-# Load proposal text
+# Load proposal text, modifications, cross-references
 sql = queries.PROPOSAL_TEXT_FOR_MEETING.format(placeholders=placeholders)
-rows = conn.execute(sql, uids).fetchall()
-# Load modifications
 sql = queries.MODIFICATIONS_FOR_PROPOSALS.format(placeholders=placeholders)
-# Load cross-references (needs uids twice for both FK columns)
 sql = queries.PROPOSAL_LINKS_FOR_PROPOSALS.format(placeholders=placeholders)
-rows = conn.execute(sql, uids + uids).fetchall()
 ```
-Each agenda item gets annotated with `item["content"]`, `item["modifications"]`, and `item["links"]` dicts. The template renders these as collapsible panels, badges, and interactive buttons. New CSS classes: `.badge-content`, `.badge-mod-available`, `.proposal-text-panel`, `.cross-refs`, `.cross-ref-chip`.
+Each agenda item gets `item["content"]`, `item["modifications"]`, and `item["links"]` dicts. CSS classes: `.badge-content`, `.badge-mod-available`, `.proposal-text-panel`, `.cross-refs`, `.cross-ref-chip`.
 
-### cdpACCESS Integration
-ICC's official code platform. Currently we export Word docs that staff use as reference for manual data entry. Direct API integration is a future goal but requires coordination with the CDP team.
+---
 
-### Reorder Agenda via Drag & Drop
-The API endpoint exists (`/meeting/{id}/agenda/reorder`) but there's no drag-and-drop UI yet. Currently agenda items are ordered by the order they were added.
+## What Alex Will Likely Ask You To Build Next
+
+See `PORTAL_ROADMAP.md` for the full three-phase plan. Current priorities:
+
+### 1. SharePoint Azure AD Setup
+The upload service is built but dormant. Alex needs to register an Azure AD app and set env vars. See `services/sharepoint.py`.
+
+### 2. "Further Modified" / Combined Consideration Workflow
+The portal can't yet capture complex meeting actions: further modifications (original mod rejected, new one crafted live), combined consideration (two proposals heard together), superseded proposals, mid-meeting withdrawals. See `PORTAL_ROADMAP.md` Phase 2, Step 6.
+
+### 3. Transcript Extraction Pipeline
+Upload DOCX transcript → LLM extracts votes, reasons, modifications → review and import. `meeting_events` table exists but is empty. See `PORTAL_ROADMAP.md` Phase 3, Step 9.
+
+### 4. Meeting Prep Dashboard
+Pre-meeting view showing content readiness per proposal. Not yet built.
+
+### 5. cdpACCESS Integration
+Currently we export Word docs that staff manually reference. Direct API integration deferred.
+
+### 6. Drag & Drop Agenda Reorder
+The API endpoint exists (`/meeting/{id}/agenda/reorder`) but there's no drag-and-drop UI yet.
 
 ---
 
@@ -184,6 +201,9 @@ After making changes, verify:
 14. **Exports** — click any export button → downloads a .docx file
 15. **Circ form pipeline** — complete a meeting as chair → sign in as secretariat → circ form appears on dashboard → Preview/Approve/Reject work
 16. **Circ forms page** — `/circ-forms` shows all forms with pending/reviewed sections
+17. **Go Live mode** — `/meeting/{id}/go-live` loads presentation view with big text, vote counters, auto-advance
+18. **Document upload** — upload a PDF via portal documents section → file appears in Go Live document viewer
+19. **Go Live staging** — stage an action in Go Live → card collapses, progress updates, auto-advances to next proposal
 
 ---
 

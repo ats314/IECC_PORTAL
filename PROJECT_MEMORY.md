@@ -3,7 +3,7 @@
 > **Owner:** Alex Smith, Director of Energy Programs, ICC
 > **Role:** Secretariat to the IECC (Commercial & Residential)
 > **Created:** 2026-02-14
-> **Last Updated:** 2026-03-06 (Session 33)
+> **Last Updated:** 2026-03-10 (Session 34)
 
 ## Project Goal
 
@@ -954,6 +954,39 @@ Most issues from early sessions have been resolved through subsequent data minin
 - **SharePoint upload built but dormant** — Upload service exists (`services/sharepoint.py`) but requires Azure AD app registration. Alex needs to set up App Registration with `Sites.ReadWrite.All` permission and configure env vars. See Session 25 entry.
 
 All other Session 6–9 issues (governance tables, SG action gaps, vote/reason coverage, residential track build, etc.) were resolved in Sessions 8–12.
+
+### Session 34 — 2026-03-10 (Documentation Overhaul & Code Health Audit)
+**Agent:** Claude (Anthropic)
+**Actions:**
+- **Full code health audit** of the web application. Ran comprehensive codebase review covering routes, templates, database queries, config, static files, dependencies, and auth/role enforcement. Found one bug (`meeting_docs.py` using `user.get("username")` instead of `user.get("name")`). Fixed immediately.
+- **Comprehensive documentation update** — brought all 8 project docs up to date with reality:
+  - **DEVELOPMENT.md** — Marked Go Live, Meeting Documents, Centralized Content, and 14 chair accounts as DONE. Reprioritized "What's NOT Built" to focus on: Further Modified workflow, Transcript Extraction, Meeting Prep Dashboard. Removed stale Priority 2 (Go Live) and Priority 5 (More Chair Accounts) that were already completed.
+  - **LLM_HANDOFF.md** — Rewrote "What Alex Will Likely Ask" section to separate completed features (Go Live, meeting docs, 14 chair accounts, rich text + content) from actual future work. Added `meeting_docs.py` and Go Live partials to key files tables. Added Go Live and document upload to testing checklist.
+  - **PORTAL_ROADMAP.md** — Updated Phase 1 status to use DB query instead of hardcoded count. Updated Phase 2 status to note Go Live completion.
+  - **AGENT_GUIDE.md** — Updated session date to Session 34. Added `meeting_documents` table to Web App Tables schema section.
+  - **web/ARCHITECTURE.md** — Added `meeting_documents` table to Tables Created section. Added Go Live and document routes to Route Access Matrix.
+  - **web/README.md** — Added `meeting_docs.py`, `meeting_go_live.html`, Go Live partials, `go-live.css`, and `favicon.svg` to file structure. Updated user accounts table from 5 to 17 accounts with summary format.
+  - **Root README.md** — Complete rewrite for GitHub presentation: added feature screenshots section placeholder, expanded tech stack, added development status with roadmap progress bars, cleaner project structure, contributing section.
+- **PROJECT_MEMORY.md** — This session entry.
+
+**DB changes:**
+- None.
+
+**Files modified:**
+- `web/routes/meeting_docs.py` — Fixed `user.get("username")` → `user.get("name")`
+- `web/DEVELOPMENT.md` — Major update: marked completed features, reprioritized roadmap
+- `web/LLM_HANDOFF.md` — Rewrote future work section, added Go Live + meeting docs to tables/checklists
+- `web/ARCHITECTURE.md` — Added meeting_documents table, Go Live routes
+- `web/README.md` — Added Go Live, meeting docs, updated user accounts
+- `PORTAL_ROADMAP.md` — Updated phase status markers
+- `AGENT_GUIDE.md` — Updated session date, added meeting_documents schema
+- `PROJECT_MEMORY.md` — This entry
+- `README.md` — Complete rewrite for GitHub
+
+**State changes propagated:**
+- [x] All 8 documentation files updated
+- [x] Bug fix committed (meeting_docs.py)
+- [x] Known issues — no new issues; no issues resolved
 
 ---
 

@@ -78,7 +78,8 @@ web/
 │   ├── dashboard.py        # Secretariat dashboard (GET /)
 │   ├── proposals.py        # Proposal list + detail (GET /proposals, /proposals/{id})
 │   ├── meetings.py         # Meeting list + detail + create (GET/POST /meetings)
-│   ├── subgroup_portal.py  # Chair's meeting portal — the core feature
+│   ├── subgroup_portal.py  # Chair meeting portal + Go Live presentation mode
+│   ├── meeting_docs.py     # Meeting document upload/view for Go Live display
 │   ├── exports.py          # Word document generation endpoints
 │   └── circforms.py        # Circ form review queue (secretariat-only)
 │
@@ -98,6 +99,7 @@ web/
 │   ├── meetings.html       # Meeting list with track filter + create form
 │   ├── meeting_detail.html # Single meeting with its proposals
 │   ├── meeting_portal.html # THE CORE — chair's live meeting management
+│   ├── meeting_go_live.html # Go Live — full-screen presentation mode for Teams
 │   ├── meeting_review.html # Review staged actions before sending
 │   ├── circ_forms.html     # Circ form review queue (secretariat)
 │   └── partials/
@@ -105,11 +107,15 @@ web/
 │       ├── action_unstaged.html # HTMX partial — inline edit form with pre-filled values
 │       ├── action_error.html    # HTMX partial — validation error on action
 │       ├── circform_row.html    # HTMX partial — circ form row after approve/reject
+│       ├── go_live_staged.html   # HTMX partial — Go Live action card after staging
+│       ├── go_live_unstaged.html # HTMX partial — Go Live inline edit form
 │       └── proposal_rows.html   # HTMX partial — filtered proposal table rows
 │
 └── static/
     ├── css/main.css        # All styles (dark theme, cards, tables, portal, badges)
-    └── js/htmx.min.js      # HTMX library
+    ├── css/go-live.css     # Go Live presentation mode styles (big text, vote counters)
+    ├── js/htmx.min.js      # HTMX library
+    └── favicon.svg         # ICC-themed SVG favicon
 ```
 
 ## Dependencies
@@ -140,15 +146,16 @@ web/
 
 ## Preset User Accounts
 
-Defined in `routes/auth.py` USERS dict:
+Defined in `routes/auth.py` USERS dict. 17 accounts total:
 
-| Username | Name | Role | Subgroup |
-|----------|------|------|----------|
-| alex.smith | Alex Smith | secretariat | All |
-| jason.toves | Jason Toves | secretariat | All |
-| kevin.rose | Kevin Rose | secretariat | All |
-| brian.shanks | Brian Shanks | chair | Residential Modeling (SG2) |
-| rob.howard | Robert Howard | chair | Residential Modeling (SG2) |
+| Role | Count | Examples |
+|------|-------|---------|
+| Secretariat | 3 | Alex Smith, Jason Toves, Kevin Rose |
+| Residential Chairs | 8 | Brian Shanks (SG2), Rick Madrid (SG6), Envelope/EPLR/Admin/EB chairs, Consensus chair |
+| Commercial Chairs | 5 | Admin, Envelope, EPLR, HVACR, Modeling chairs |
+| Consensus Chair | 1 | Duane Jonlin (both tracks) |
+
+See `routes/auth.py` for the full USERS dict with names, bodies, and tracks.
 
 ## Key Domain Concept: Body-to-Subgroup Mapping
 
