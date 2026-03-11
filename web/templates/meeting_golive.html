@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Go Live — {{ meeting.body }} — ICC</title>
+    <link rel="stylesheet" href="/static/css/main.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/quill/1.3.7/quill.snow.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/quill/1.3.7/quill.min.js"></script>
+    <script src="/static/js/htmx.min.js"></script>
+    <style>
+        body { overflow: hidden; }
+        /* Full-viewport Go Live layout */
+        .golive-container { height: 100vh; }
+    </style>
+</head>
+<body>
+<div class="golive-container">
+    <!-- Top bar -->
+    <div class="golive-topbar">
+        <div class="golive-topbar-left">
+            <span class="golive-meeting-title">{{ meeting.body }}</span>
+            <div class="golive-progress-mini">
+                <div class="golive-progress-bar">
+                    <div class="golive-progress-fill" id="gl-progress-fill"
+                         style="width: {{ ((done_count / total * 100) if total > 0 else 0)|round(0)|int }}%;"></div>
+                </div>
+                <span class="golive-progress-text" id="gl-progress-text">{{ done_count }}/{{ total }}</span>
+            </div>
+        </div>
+        <div class="golive-topbar-right">
+            <span class="golive-clock" id="gl-clock"></span>
+            <a href="/meeting/{{ meeting.id }}/portal" class="golive-exit">Exit Go Live</a>
+            {% if done_count > 0 %}
+            <a href="/meeting/{{ meeting.id }}/review" class="btn btn-success btn-sm">Review & Send</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Proposal nav strip -->
+    <div style="padding: 1rem 2rem 0;">
+        <div class="golive-nav-strip" id="gl-nav-strip">
+            {% for item in agenda %}
+            <a href="#" class="golive-nav-chip {% if item.staged_action %}done{% endif %} {% if loop.index0 == current_index %}active{% endif %}"
+               data-index="{{ loop.index0 }}" onclick="goToProposal({{ loop.index0 }}); return false;">
+                {{ item.canonical_id }}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Main body: current proposal -->
+    <div class="golive-body" id="gl-body">
+        {% set item = agenda[current_index] if agenda else None %}
+        {% if item %}
+
+        <div class="golive-proposal">
+            <div class="golive-proposal-header">
+                <div class="golive-proposal-id">
+                    {{ item.canonical_id }}
+                    {% if item.status == 'Testing' %}
+                    <span class="badge badge-testing" style="font-size: 0.8rem; vertical-align: middle;">TESTING</span>
+                    {% endif %}
+                </div>
+                <div class="golive-proposal-meta">
+                    <strong>{{ item.code_section or 'No code section' }}</strong>
+                    &nbsp;&bull;&nbsp; {{ item.proponent or 'Unknown proponent' }}
+                    {% if item.cdpaccess_url %}
+                    &nbsp;&bull;&nbsp; <a href="{{ item.cdpaccess_url }}" target="_blank" style="font-size: 0.9rem;">cdpACCESS &rarr;</a>
+                    {% endif %}
+                </div>
+            </div>
+
+            {# Code language panel #}
+            {% if item.content and item.content.proposal_html %}
+            <div class="golive-code-section">
+                <div class="mod-rich">{{ item.content.proposal_html|safe }}</div>
+            </div>
+            {% endif %}
+
+            {# Cross-references #}
+            {% if item.links %}
+            <div style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">Related:</span>
+                {% for link in item.links %}
+                <span class="cross-ref-chip" style="cursor: default;">
+                    {{ link.canonical_id }}
+                    <span class="cross-ref-type">{{ link.link_type|replace('_', ' ') }}</span>
+                </span>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {# Action area #}
+            {% if item.staged_action %}
+            <div class="golive-staged">
+                <div class="golive-staged-rec">{{ item.staged_action.recommendation }}</div>
+                <div class="golive-staged-vote">
+                    {% if item.staged_action.vote_for is not none %}
+                    Vote: {{ item.staged_action.vote_for }}-{{ item.staged_action.vote_against }}-{{ item.staged_action.vote_not_voting or 0 }}
+                    {% endif %}
+                    {% if item.staged_action.moved_by %}
+                    &nbsp;&bull;&nbsp; M: {{ item.staged_action.moved_by }}
+                    {% if item.staged_action.seconded_by %} / S: {{ item.staged_action.seconded_by }}{% endif %}
+                    {% endif %}
+                </div>
+                <div class="golive-staged-edit">
+                    <a href="/meeting/{{ meeting.id }}/go-live?index={{ current_index }}&edit=1" class="btn btn-sm">Edit Action</a>
+                    {% if current_index < total - 1 %}
+                    <a href="/meeting/{{ meeting.id }}/go-live?index={{ current_index + 1 }}" class="btn btn-primary btn-sm" style="margin-left: 0.5rem;">
+                        Next: {{ agenda[current_index + 1].canonical_id }} &rarr;
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            {% else %}
+            {# Action form #}
+            <div class="golive-actions">
+                <form method="POST" action="/meeting/{{ meeting.id }}/go-live/stage?index={{ current_index }}" id="gl-form">
+                    <input type="hidden" name="canonical_id" value="{{ item.canonical_id }}">
+
+                    <div class="golive-rec-buttons" id="gl-rec-buttons">
+                        <button type="button" class="golive-rec-btn rec-approved" data-rec="Approved as Submitted" onclick="selectRec(this)">
+                            Approved as Submitted
+                        </button>
+                        <button type="button" class="golive-rec-btn rec-approved" data-rec="Approved as Modified" onclick="selectRec(this)">
+                            Approved as Modified
+                        </button>
+                        <button type="button" class="golive-rec-btn rec-disapproved" data-rec="Disapproved" onclick="selectRec(this)">
+                            Disapproved
+                        </button>
+                        <button type="button" class="golive-rec-btn" data-rec="Withdrawn" onclick="selectRec(this)">
+                            Withdrawn
+                        </button>
+                        <button type="button" class="golive-rec-btn" data-rec="Postponed" onclick="selectRec(this)">
+                            Postponed
+                        </button>
+                    </div>
+                    <input type="hidden" name="recommendation" id="gl-rec-input" value="">
+
+                    <div class="golive-vote-row">
+                        <div class="golive-vote-group">
+                            <span class="golive-vote-label">For</span>
+                            <input type="number" name="vote_for" class="golive-vote-input" min="0" placeholder="—" id="gl-vote-for">
+                        </div>
+                        <div class="golive-vote-group">
+                            <span class="golive-vote-label">Against</span>
+                            <input type="number" name="vote_against" class="golive-vote-input" min="0" placeholder="—">
+                        </div>
+                        <div class="golive-vote-group">
+                            <span class="golive-vote-label">NV</span>
+                            <input type="number" name="vote_not_voting" class="golive-vote-input" min="0" placeholder="—">
+                        </div>
+                        <button type="button" class="btn btn-sm" onclick="fillUnanimousGL()" style="align-self: flex-end; margin-bottom: 0.25rem;">
+                            Unanimous
+                        </button>
+                    </div>
+
+                    <div class="golive-bottom-row">
+                        <div class="form-group">
+                            <label class="form-label">Moved By</label>
+                            <select name="moved_by" class="form-select">
+                                <option value="">Select...</option>
+                                {% for m in members %}
+                                <option value="{{ m.display_name }}">{{ m.display_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Seconded By</label>
+                            <select name="seconded_by" class="form-select">
+                                <option value="">Select...</option>
+                                {% for m in members %}
+                                <option value="{{ m.display_name }}">{{ m.display_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group" style="flex: 2;">
+                            <label class="form-label">Reason</label>
+                            <input type="text" name="reason" class="form-input" placeholder="Committee reason..." style="font-size: 1rem; padding: 0.6rem;">
+                        </div>
+                    </div>
+
+                    {# Modification text (hidden until needed) #}
+                    <div id="gl-mod-section" style="display: none; margin-bottom: 1rem;">
+                        <label class="form-label">
+                            Modification Text
+                            <span class="text-muted text-xs">(underline = additions, strikethrough = deletions)</span>
+                        </label>
+                        <div class="gl-doc-selector" style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                            <select id="gl-doc-select" class="form-select" style="max-width: 400px; font-size: 0.85rem;"
+                                    onchange="loadSelectedDocGL()">
+                                <option value="">— Select a document to load —</option>
+                                {% if item.content and item.content.proposal_html %}
+                                <option value="__original__">Original Proposal Text</option>
+                                {% endif %}
+                                {% if item.modifications %}
+                                {% for mod in item.modifications %}
+                                <option value="mod_{{ mod.id }}"
+                                        data-mod-html="{{ mod.modification_html|e }}">
+                                    Modification{% if item.modifications|length > 1 %} {{ loop.index }}{% endif %}{% if mod.submitted_by %} — {{ mod.submitted_by }}{% endif %}{% if mod.submitted_date %} ({{ mod.submitted_date }}){% endif %}
+                                </option>
+                                {% endfor %}
+                                {% endif %}
+                            </select>
+                            <span class="text-xs text-muted" style="white-space: nowrap;">Approved by Secretariat</span>
+                        </div>
+                        <input type="hidden" name="modification_text" id="gl-mod-input" value="">
+                        <div id="gl-quill-editor" style="min-height: 100px;"
+                             {% if item.content %}data-proposal-html="{{ item.content.proposal_html|e }}"{% endif %}></div>
+                    </div>
+
+                    <div class="golive-submit-row">
+                        <div class="golive-next-hint">
+                            {% if current_index < total - 1 %}
+                            Next: <strong>{{ agenda[current_index + 1].canonical_id }}</strong>
+                            {% else %}
+                            <strong>Last proposal on agenda</strong>
+                            {% endif %}
+                        </div>
+                        <button type="submit" class="golive-save-btn" id="gl-save-btn" disabled>
+                            Save & Next &rarr;
+                        </button>
+                    </div>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+
+        {% else %}
+        <div class="alert alert-success" style="text-align: center; padding: 3rem; font-size: 1.3rem; margin-top: 3rem;">
+            <strong>All proposals addressed!</strong><br>
+            <a href="/meeting/{{ meeting.id }}/review" class="btn btn-success btn-lg" style="margin-top: 1rem;">Review & Send to Secretariat &rarr;</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+// Clock
+function updateClock() {
+    const now = new Date();
+    let h = now.getHours(), m = now.getMinutes(), s = now.getSeconds();
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    h = h % 12 || 12;
+    document.getElementById('gl-clock').textContent =
+        h + ':' + String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0') + ' ' + ampm;
+}
+updateClock();
+setInterval(updateClock, 1000);
+
+// Recommendation selection
+function selectRec(btn) {
+    document.querySelectorAll('.golive-rec-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    const rec = btn.dataset.rec;
+    document.getElementById('gl-rec-input').value = rec;
+    document.getElementById('gl-save-btn').disabled = false;
+
+    // Show/hide modification section
+    const modSection = document.getElementById('gl-mod-section');
+    if (rec.includes('Modified')) {
+        modSection.style.display = 'block';
+        initQuillGL();
+    } else {
+        modSection.style.display = 'none';
+    }
+}
+
+// Unanimous
+function fillUnanimousGL() {
+    const vf = document.getElementById('gl-vote-for');
+    const va = document.querySelector('input[name="vote_against"]');
+    const vnv = document.querySelector('input[name="vote_not_voting"]');
+    // If votes already entered, move total to FOR; otherwise use member count
+    const existing = parseInt(vf.value || 0) + parseInt(va.value || 0) + parseInt(vnv.value || 0);
+    const memberCount = {{ members|length if members else 0 }};
+    if (existing > 0) {
+        vf.value = existing;
+    } else if (memberCount > 0) {
+        vf.value = memberCount;
+    } else {
+        vf.focus();
+    }
+    va.value = 0;
+    vnv.value = 0;
+}
+
+// Navigate to proposal
+function goToProposal(index) {
+    window.location.href = '/meeting/{{ meeting.id }}/go-live?index=' + index;
+}
+
+// Keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
+    if (e.key === 'ArrowRight' && {{ current_index }} < {{ total - 1 }}) {
+        goToProposal({{ current_index + 1 }});
+    } else if (e.key === 'ArrowLeft' && {{ current_index }} > 0) {
+        goToProposal({{ current_index - 1 }});
+    } else if (e.key === '1') selectRecByIndex(0);
+    else if (e.key === '2') selectRecByIndex(1);
+    else if (e.key === '3') selectRecByIndex(2);
+    else if (e.key === '4') selectRecByIndex(3);
+    else if (e.key === '5') selectRecByIndex(4);
+});
+function selectRecByIndex(i) {
+    const btns = document.querySelectorAll('.golive-rec-btn');
+    if (btns[i]) selectRec(btns[i]);
+}
+
+// Quill for Go Live
+let glQuill = null;
+function initQuillGL() {
+    if (glQuill) return;
+    const editor = document.getElementById('gl-quill-editor');
+    if (!editor) return;
+    glQuill = new Quill(editor, {
+        theme: 'snow',
+        modules: {
+            toolbar: [['bold', 'underline', 'strike'], [{'list':'ordered'},{'list':'bullet'}], ['clean']]
+        },
+        placeholder: 'Enter modification language...'
+    });
+    // Sync on form submit
+    document.getElementById('gl-form').addEventListener('submit', function() {
+        const html = glQuill.root.innerHTML;
+        document.getElementById('gl-mod-input').value = (html === '<p><br></p>') ? '' : html;
+    });
+}
+
+function loadSelectedDocGL() {
+    const select = document.getElementById('gl-doc-select');
+    if (!select.value) return;
+
+    initQuillGL();
+    if (!glQuill) return;
+
+    const modSection = document.getElementById('gl-mod-section');
+    modSection.style.display = 'block';
+
+    if (select.value === '__original__') {
+        // Load original proposal text
+        const editor = document.getElementById('gl-quill-editor');
+        const html = editor.dataset.proposalHtml;
+        if (!html) return;
+        const tmp = document.createElement('textarea');
+        tmp.innerHTML = html;
+        glQuill.root.innerHTML = tmp.value;
+    } else {
+        // Load a pre-submitted modification — set rec to AM
+        const recInput = document.getElementById('gl-rec-input');
+        if (!recInput.value.includes('Modified')) {
+            recInput.value = 'Approved as Modified';
+            document.querySelectorAll('.golive-rec-btn').forEach(b => {
+                b.classList.toggle('selected', b.dataset.rec === 'Approved as Modified');
+            });
+            document.getElementById('gl-save-btn').disabled = false;
+        }
+        const option = select.options[select.selectedIndex];
+        const modHtml = option.dataset.modHtml;
+        if (!modHtml) return;
+        const tmp = document.createElement('textarea');
+        tmp.innerHTML = modHtml;
+        glQuill.root.innerHTML = tmp.value;
+    }
+
+    // Flash the select to confirm
+    select.style.borderColor = 'var(--success)';
+    setTimeout(() => { select.style.borderColor = ''; }, 1000);
+}
+</script>
+</body>
+</html>

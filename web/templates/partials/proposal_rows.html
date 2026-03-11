@@ -19,6 +19,7 @@
         <td>
             {% if p.status == 'Decided' %}<span class="badge badge-decided">Decided</span>
             {% elif p.status == 'Pending' %}<span class="badge badge-pending">Pending</span>
+            {% elif p.status == 'Testing' %}<span class="badge badge-testing">Testing</span>
             {% elif p.status == 'Withdrawn' %}<span class="badge badge-withdrawn">Withdrawn</span>
             {% else %}<span class="badge badge-closed">{{ p.status }}</span>
             {% endif %}

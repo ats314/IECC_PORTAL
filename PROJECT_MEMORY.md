@@ -3,7 +3,7 @@
 > **Owner:** Alex Smith, Director of Energy Programs, ICC
 > **Role:** Secretariat to the IECC (Commercial & Residential)
 > **Created:** 2026-02-14
-> **Last Updated:** 2026-03-06 (Session 33)
+> **Last Updated:** 2026-03-10 (Session 34)
 
 ## Project Goal
 
@@ -919,6 +919,54 @@ Proposals in PUBLIC_INPUT phase that received no consensus action are "Phase Clo
 - [x] web/DEVELOPMENT.md — Fixed stale count
 - [x] iecc_startup.py — Phase 2B cross-check
 - [x] skills-update/iecc-startup — Full rewrite
+
+### Session 34 — 2026-03-10 (Demo Prep: CSS Fix, Browser Preview Skill, Fused Words Fix)
+**Agent:** Claude (Anthropic)
+**Actions:**
+- **Fixed broken CSS variable references across 6 templates** — Previous session's CSS theme redesign changed `--icc-light` to `--icc-green` but left stale references in `proposal_detail.html`, `dashboard.html`, `meeting_review.html`, `meeting_detail.html`, `meeting_portal.html`, and `meetings.html`. All updated.
+- **Deleted stale test artifacts from web/ directory** — Removed `iecc_test.db`, `start_test.bat`, stale `iecc.db`/`iecc.db-journal` that were accidentally left in the `web/` folder.
+- **Solved browser preview permanently** — Discovered the working approach: Alex runs `start.bat` on Windows, agent navigates Chrome to `http://127.0.0.1:8080`. Created permanent documentation as a skill and added hard rule to CLAUDE.md. The Linux VM's network (172.16.10.x) is unreachable from the Windows host's Chrome — this is a fundamental networking constraint.
+- **Created iecc-browser-preview skill** — 103-line skill at `skills-update/iecc-browser-preview/SKILL.md` documenting the VM networking constraint, the working approach, and what NOT to try. Needs to be copied to Alex's Windows skills directory.
+- **Created demo meeting** — Meeting ID 94: Residential Modeling Subgroup (Brian Shanks, SG2), scheduled 2026-03-19 14:00-17:00, CODE_PROPOSAL phase, SCHEDULED status. Created for ICC leadership demo walkthrough.
+- **Traced chair workflow end-to-end** — Walked through Brian Shanks' perspective from chair_home → meeting portal → agenda → staging actions → modification workflow. Identified that chairs cannot create meetings (secretariat must).
+- **Fixed fused words bug in monograph PDF extraction** — Root cause: `extract_monograph_markup.py` was not inserting spaces at PDF line boundaries or between spans with x-coordinate gaps. Added three space-injection points:
+  1. Space at PDF line boundaries when text wraps within same paragraph
+  2. Space between spans when x-gap > 2px indicates a word boundary
+  3. Space between characters within spans when x-gap > 2px
+- **Re-ran monograph extraction** — All 39 `monograph_markup` proposals regenerated with proper spacing. Cleaned up 39 superseded lower-priority entries (`cdpaccess_pdf`, `monograph_pdf`).
+- **Result: 28/39 proposals fixed, 2 unfixable** — CEPC30-25 and CECP1-25 have fundamentally broken text encoding in the source PDF (zero-gap characters). The remaining 6 "long words" were formulas or legitimate compound terms.
+- **DOCX pipeline confirmed clean** — Only 3/134 DOCX proposals had long fused words, all from source document quality issues (not extraction bugs). No code changes needed.
+
+**DB changes:**
+- Meeting 94 created (Residential Modeling Subgroup, 2026-03-19)
+- proposal_text: 39 monograph_markup entries regenerated with fixed spacing
+- proposal_text: 39 superseded cdpaccess_pdf/monograph_pdf entries removed
+- Final counts: cdpaccess_docx: 134, monograph_markup: 39, cdpaccess_pdf: 5
+
+**Files modified:**
+- `extract_monograph_markup.py` — Added space injection at PDF line boundaries (line 185-191), span boundary gap detection (lines 128-134, 145-152), and intra-span character gap detection (lines 163-168). Core fix for fused words bug.
+- `web/templates/proposal_detail.html` — `--icc-light` → `--icc-green`
+- `web/templates/dashboard.html` — `--icc-light` → `--icc-green`
+- `web/templates/meeting_review.html` — `--icc-light` → `--icc-green`
+- `web/templates/meeting_detail.html` — `--icc-light` → `--icc-green`
+- `web/templates/meeting_portal.html` — `--icc-light` → `--icc-green` (all occurrences)
+- `web/templates/meetings.html` — `--icc-light` → `--icc-green`
+- `CLAUDE.md` — Added browser preview hard rule, updated skill routing table from 6 to 7 skills with iecc-browser-preview entry
+- `skills-update/iecc-browser-preview/SKILL.md` — NEW: browser preview skill documenting VM networking constraint
+- `PROJECT_MEMORY.md` — this entry
+
+**State changes propagated:**
+- [x] PROJECT_MEMORY.md — this entry
+- [ ] DEVELOPMENT.md — no feature status changes
+- [ ] AGENT_GUIDE.md — no schema changes
+- [ ] LLM_HANDOFF.md — no web pattern changes
+- [x] CLAUDE.md — browser preview hard rule + 7th skill in routing table
+- [x] skills-update/iecc-browser-preview — NEW skill (needs copy to Windows)
+
+### Known Issues from Session 34
+**New:**
+- **2 monograph proposals with unfixable fused words** — CEPC30-25 and CECP1-25 have source PDF text layers with zero-gap character placement. No extraction fix possible without NLP word-breaking. Low priority (both are in code language sections).
+- **Demo meeting ID 94 is in production DB** — Created for demo purposes. Should be deleted or marked inactive after the demo.
 
 ### Known Issues from Session 30
 **New:**

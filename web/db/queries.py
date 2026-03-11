@@ -9,7 +9,8 @@ SELECT
     SUM(CASE WHEN status = 'Decided' THEN 1 ELSE 0 END) as decided,
     SUM(CASE WHEN status = 'Pending' THEN 1 ELSE 0 END) as pending,
     SUM(CASE WHEN status = 'Withdrawn' THEN 1 ELSE 0 END) as withdrawn,
-    SUM(CASE WHEN status = 'Phase Closed' THEN 1 ELSE 0 END) as phase_closed
+    SUM(CASE WHEN status = 'Phase Closed' THEN 1 ELSE 0 END) as phase_closed,
+    SUM(CASE WHEN status = 'Testing' THEN 1 ELSE 0 END) as testing
 FROM v_current_status
 GROUP BY track
 """
@@ -18,7 +19,7 @@ PENDING_BY_SUBGROUP = """
 SELECT
     track, current_subgroup, COUNT(*) as count
 FROM v_current_status
-WHERE status = 'Pending'
+WHERE status IN ('Pending', 'Testing')
 GROUP BY track, current_subgroup
 ORDER BY track, count DESC
 """
@@ -145,7 +146,7 @@ FROM proposals p
 JOIN v_current_status v ON p.canonical_id = v.canonical_id
 WHERE p.track = ?
   AND p.current_subgroup = ?
-  AND v.status = 'Pending'
+  AND v.status IN ('Pending', 'Testing')
 ORDER BY p.canonical_id
 """
 
@@ -234,7 +235,7 @@ FROM proposals p
 JOIN v_current_status v ON p.canonical_id = v.canonical_id
 WHERE p.track = ?
   AND p.current_subgroup = ?
-  AND v.status = 'Pending'
+  AND v.status IN ('Pending', 'Testing')
   AND p.proposal_uid NOT IN (
       SELECT proposal_uid FROM meeting_agenda_items WHERE meeting_id = ?
   )
@@ -318,7 +319,7 @@ FROM proposals p
 JOIN v_current_status v ON p.canonical_id = v.canonical_id
 WHERE p.track = ?
   AND p.current_subgroup = ?
-  AND v.status = 'Pending'
+  AND v.status IN ('Pending', 'Testing')
 """
 
 # === CENTRALIZED CONTENT (proposal_text, modifications, proposal_links) ===
@@ -328,17 +329,49 @@ SELECT pt.proposal_uid, pt.proposal_html, pt.proposal_plain,
        pt.reason_text, pt.cost_impact_text, pt.code_section_text,
        pt.source_type, pt.verified
 FROM proposal_text pt
-WHERE pt.proposal_uid IN ({placeholders})
+INNER JOIN (
+    SELECT proposal_uid, MIN(
+        CASE source_type
+            WHEN 'cdpaccess_docx' THEN 1
+            WHEN 'monograph_markup' THEN 2
+            WHEN 'cdpaccess_pdf' THEN 3
+            WHEN 'monograph_pdf' THEN 4
+            ELSE 5
+        END
+    ) as best_rank
+    FROM proposal_text
+    WHERE proposal_uid IN ({placeholders})
+    GROUP BY proposal_uid
+) best ON pt.proposal_uid = best.proposal_uid
+    AND CASE pt.source_type
+            WHEN 'cdpaccess_docx' THEN 1
+            WHEN 'monograph_markup' THEN 2
+            WHEN 'cdpaccess_pdf' THEN 3
+            WHEN 'monograph_pdf' THEN 4
+            ELSE 5
+        END = best.best_rank
 """
 
 MODIFICATIONS_FOR_PROPOSALS = """
 SELECT m.id, m.proposal_uid, m.submitted_by, m.submitted_date,
        m.modification_html, m.modification_plain, m.reason_text,
-       m.status, m.source_path
+       m.status, m.source_path, m.secretariat_approved
 FROM modifications m
 WHERE m.proposal_uid IN ({placeholders})
   AND m.status NOT IN ('withdrawn', 'superseded')
+  AND m.secretariat_approved = 1
 ORDER BY m.submitted_date DESC
+"""
+
+# Secretariat view: ALL modifications (including unapproved) for approval management
+MODIFICATIONS_ALL_FOR_PROPOSAL = """
+SELECT m.id, m.proposal_uid, m.submitted_by, m.submitted_date,
+       m.modification_html, m.modification_plain, m.reason_text,
+       m.status, m.source_path, m.secretariat_approved
+FROM modifications m
+WHERE m.proposal_uid = ?
+  AND m.status NOT IN ('withdrawn', 'superseded')
+ORDER BY m.secretariat_approved DESC, m.submitted_date DESC
 """
 
 PROPOSAL_LINKS_FOR_PROPOSALS = """
@@ -356,4 +389,12 @@ SELECT pt.proposal_html, pt.proposal_plain, pt.reason_text,
        pt.cost_impact_text, pt.code_section_text, pt.source_type
 FROM proposal_text pt
 WHERE pt.proposal_uid = ?
+ORDER BY CASE pt.source_type
+    WHEN 'cdpaccess_docx' THEN 1
+    WHEN 'monograph_markup' THEN 2
+    WHEN 'cdpaccess_pdf' THEN 3
+    WHEN 'monograph_pdf' THEN 4
+    ELSE 5
+END
+LIMIT 1
 """

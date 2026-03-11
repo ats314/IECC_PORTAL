@@ -28,13 +28,6 @@ USERS = {
         "body": None,
         "track": None,
     },
-    "kevin.rose": {
-        "name": "Kevin Rose",
-        "role": "secretariat",
-        "title": "Staff Secretary",
-        "body": None,
-        "track": None,
-    },
     # ── Residential Chairs ──────────────────────────────────────────
     "brian.shanks": {
         "name": "Brian Shanks",
@@ -224,7 +217,7 @@ async def chair_home(request: Request):
         pending_count = conn.execute(
             """SELECT COUNT(*) as c FROM proposals p
                JOIN v_current_status v ON p.canonical_id = v.canonical_id
-               WHERE p.track = ? AND p.current_subgroup = ? AND v.status = 'Pending'""",
+               WHERE p.track = ? AND p.current_subgroup = ? AND v.status IN ('Pending', 'Testing')""",
             (user["track"], subgroup_name)
         ).fetchone()["c"]
 

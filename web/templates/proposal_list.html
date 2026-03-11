@@ -24,6 +24,7 @@
         <option value="Pending" {% if filters.status == 'Pending' %}selected{% endif %}>Pending</option>
         <option value="Withdrawn" {% if filters.status == 'Withdrawn' %}selected{% endif %}>Withdrawn</option>
         <option value="Phase Closed" {% if filters.status == 'Phase Closed' %}selected{% endif %}>Phase Closed</option>
+        <option value="Testing" {% if filters.status == 'Testing' %}selected{% endif %}>Testing</option>
     </select>
     <select name="phase" class="form-select" onchange="this.form.requestSubmit()">
         <option value="">All Phases</option>

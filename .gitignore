@@ -38,6 +38,12 @@ web/iecc.db
 web/iecc.db-journal
 web/iecc.db-wal
 
+# OneDrive sync archives (large zip files)
+OneDrive_*.zip
+
+# Node.js
+node_modules/
+
 # OneDrive / FUSE artifacts
 .fuse_hidden*
 
@@ -62,6 +68,7 @@ skills-update/
 *.xlsx
 *.pdf
 *.pptx
+*.csv
 
 # Snapshot data (iecc_snapshot.py output)
 .snapshots/

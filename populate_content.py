@@ -24,9 +24,25 @@ from datetime import datetime
 DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'iecc.db')
 IECC_STD = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'IECC standard')
 PROPOSAL_TEXT_SOURCES = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'Proposal_Text_Sources')
+COMMERCIAL_2027 = os.path.join(os.path.dirname(os.path.abspath(__file__)), '2027_COMMERCIAL')
+RESIDENTIAL_2027 = os.path.join(os.path.dirname(os.path.abspath(__file__)), '2027_RESIDENTIAL')
+ARCHIVES = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'ARCHIVES')
+ONEDRIVE_SYNC = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'OneDrive_1_3-9-2026')
+PC_POSTING_JAN = os.path.join(os.path.dirname(os.path.abspath(__file__)), '2026-01-23 Public Comment Posting')
+PC_POSTING_FEB = os.path.join(os.path.dirname(os.path.abspath(__file__)), '2026-02-13 Public Comment Posting')
+PC_POSTING_MAR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '2026-03-07 Public Comment Posting')
+# Residential public comment DOCX files (4 posting batches)
+PC_DOCS_PARENT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '2027 IECC Public Comment Documents')
+# OneDrive sync copies (may have additional files)
+ONEDRIVE_2 = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'OneDrive_2_3-9-2026')
+ONEDRIVE_3 = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'OneDrive_3_3-9-2026')
+# FUSE folder
+FUSE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'FUSE')
 
-# All source folders to scan (in priority order)
-SOURCE_FOLDERS = [IECC_STD, PROPOSAL_TEXT_SOURCES]
+# All source folders to scan (in priority order — later folders override earlier ones)
+SOURCE_FOLDERS = [IECC_STD, PROPOSAL_TEXT_SOURCES, COMMERCIAL_2027, RESIDENTIAL_2027, ARCHIVES, ONEDRIVE_SYNC,
+                  PC_POSTING_JAN, PC_POSTING_FEB, PC_POSTING_MAR,
+                  PC_DOCS_PARENT, ONEDRIVE_2, ONEDRIVE_3, FUSE]
 
 # ============================================================
 # DOCX PARSER — Extract proposal language with formatting

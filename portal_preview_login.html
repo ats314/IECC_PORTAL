@@ -1,4 +1,10 @@
-/* ICC Code Development Platform — Main Styles
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login — ICC Code Development Platform</title>
+    <style>/* ICC Code Development Platform — Main Styles
    Light theme matching iccsafe.org brand identity
    Primary: ICC Green #0B5940  |  Accent: Teal #21837C  |  Links: #0A8EF3
    Font: Roboto  |  Background: White  |  Body text: #212529 */
@@ -794,3 +800,240 @@ a:hover { color: #0870c4; text-decoration: underline; }
     .container { padding: 1rem; }
     .golive-body { padding: 1rem; }
 }
+</style>
+    <style>
+        .login-container {
+            max-width: 500px;
+            margin: 80px auto;
+            padding: 0 1rem;
+        }
+        .login-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius);
+            padding: 2rem;
+            box-shadow: var(--shadow-md);
+        }
+        .login-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .login-header h1 {
+            color: var(--icc-green);
+            font-size: 1.5rem;
+            margin-bottom: 0.25rem;
+        }
+        .login-header p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+        .role-section {
+            margin-bottom: 1.5rem;
+        }
+        .role-section h3 {
+            color: var(--icc-green);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-light);
+        }
+        .user-option {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .user-option:hover {
+            border-color: var(--icc-green);
+            background: rgba(11, 89, 64, 0.04);
+        }
+        .user-option input[type="radio"] {
+            margin-right: 0.75rem;
+            accent-color: var(--icc-green);
+        }
+        .user-option .user-name {
+            color: var(--text-heading);
+            font-weight: 600;
+        }
+        .user-option .user-title {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            margin-top: 0.1rem;
+        }
+        .login-btn {
+            width: 100%;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">
+            <a href="/login">ICC Code Development Platform</a>
+        </div>
+    </nav>
+
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <h1>Sign In</h1>
+                <p>Select your account to continue</p>
+            </div>
+
+            <form method="POST" action="/login">
+                <div class="role-section">
+                    <h3>Secretariat</h3>
+                    
+                    <label class="user-option">
+                        <input type="radio" name="user_id" value="alex.smith" checked>
+                        <div>
+                            <div class="user-name">Alex Smith</div>
+                            <div class="user-title">Director of Energy Programs</div>
+                        </div>
+                    </label>
+                    
+                    <label class="user-option">
+                        <input type="radio" name="user_id" value="jason.toves" >
+                        <div>
+                            <div class="user-name">Jason Toves</div>
+                            <div class="user-title">Senior Staff Secretary</div>
+                        </div>
+                    </label>
+                    
+                </div>
+
+                <div class="role-section">
+                    <h3>Subgroup Chairs</h3>
+                    
+                    <label class="user-option">
+                        <input type="radio" name="user_id" value="brian.shanks">
+                        <div>
+                            <div class="user-name">Brian Shanks</div>
+                            <div class="user-title">SG2 Chair — Modeling and Whole Building Metrics — Residential Modeling Subgroup</div>
+                        </div>
+                    </label>
+                    
+                    <label class="user-option">
+                        <input type="radio" name="user_id" value="rob.howard">
+                        <div>
+                            <div class="user-name">Robert Howard</div>
+                            <div class="user-title">SG2 Vice Chair — Modeling and Whole Building Metrics — Residential Modeling Subgroup</div>
+                        </div>
+                    </label>
+                    
+                    <label class="user-option">
+                        <input type="radio" name="user_id" value="rick.madrid">
+                        <div>
+                            <div class="user-name">Rick Madrid</div>
+                            <div class="user-title">SG6 Chair — HVAC and Water Heating — Residential HVAC Subgroup</div>
+                        </div>
+                    </label>
+                    
+                    <label class="user-option">
+                        <input type="radio" name="user_id" value="res.envelope.chair">
+                        <div>
+                            <div class="user-name">Envelope SG4 Chair</div>
+                            <div class="user-title">SG4 Chair — Envelope — Residential Envelope Subgroup</div>
+                        </div>
+                    </label>
+                    
+                    <label class="user-option">
+                        <input type="radio" name="user_id" value="res.eplr.chair">
+                        <div>
+                            <div class="user-name">EPLR SG3 Chair</div>
+                            <div class="user-title">SG3 Chair — EPLR — Residential EPLR Subgroup</div>
+                        </div>
+                    </label>
+                    
+                    <label class="user-option">
+                        <input type="radio" name="user_id" value="res.admin.chair">
+                        <div>
+                            <div class="user-name">Admin SG1 Chair</div>
+                            <div class="user-title">SG1 Chair — Consistency and Administration — Residential Administration Subgroup</div>
+                        </div>
+                    </label>
+                    
+                    <label class="user-option">
+                        <input type="radio" name="user_id" value="res.existing.chair">
+                        <div>
+                            <div class="user-name">Existing Buildings SG5 Chair</div>
+                            <div class="user-title">SG5 Chair — Existing Buildings — Residential Existing Building Subgroup</div>
+                        </div>
+                    </label>
+                    
+                    <label class="user-option">
+                        <input type="radio" name="user_id" value="res.consensus.chair">
+                        <div>
+                            <div class="user-name">Residential Consensus Chair</div>
+                            <div class="user-title">Residential Consensus Committee Chair — Residential Consensus Committee</div>
+                        </div>
+                    </label>
+                    
+                    <label class="user-option">
+                        <input type="radio" name="user_id" value="com.admin.chair">
+                        <div>
+                            <div class="user-name">Commercial Admin Chair</div>
+                            <div class="user-title">Commercial Administration Subgroup Chair — Commercial Administration Subgroup</div>
+                        </div>
+                    </label>
+                    
+                    <label class="user-option">
+                        <input type="radio" name="user_id" value="com.envelope.chair">
+                        <div>
+                            <div class="user-name">Commercial Envelope Chair</div>
+                            <div class="user-title">Envelope and Embodied Energy Subgroup Chair — Envelope and Embodied Energy Subgroup</div>
+                        </div>
+                    </label>
+                    
+                    <label class="user-option">
+                        <input type="radio" name="user_id" value="com.eplr.chair">
+                        <div>
+                            <div class="user-name">Commercial EPLR Chair</div>
+                            <div class="user-title">Commercial EPLR Subgroup Chair — Commercial EPLR Subgroup</div>
+                        </div>
+                    </label>
+                    
+                    <label class="user-option">
+                        <input type="radio" name="user_id" value="com.hvacr.chair">
+                        <div>
+                            <div class="user-name">Commercial HVACR Chair</div>
+                            <div class="user-title">Commercial HVACR and Water Heating Subgroup Chair — Commercial HVACR and Water Heating Subgroup</div>
+                        </div>
+                    </label>
+                    
+                    <label class="user-option">
+                        <input type="radio" name="user_id" value="com.modeling.chair">
+                        <div>
+                            <div class="user-name">Commercial Modeling Chair</div>
+                            <div class="user-title">Commercial Modeling Subgroup Chair — Commercial Modeling Subgroup</div>
+                        </div>
+                    </label>
+                    
+                    <label class="user-option">
+                        <input type="radio" name="user_id" value="duane.jonlin">
+                        <div>
+                            <div class="user-name">Duane Jonlin</div>
+                            <div class="user-title">Commercial Consensus Committee Chair — Commercial Consensus Committee</div>
+                        </div>
+                    </label>
+                    
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-lg login-btn">Sign In</button>
+            </form>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <span>ICC Code Development Platform v0.1</span>
+        <span>IECC 2027 Cycle</span>
+    </footer>
+</body>
+</html>

@@ -6,6 +6,17 @@ import tempfile
 import os
 from pathlib import Path
 
+# Directory containing node_modules/docx — used as cwd for Node.js subprocess
+_WEB_DIR = str(Path(__file__).resolve().parent.parent)
+_NODE_MODULES = str(Path(__file__).resolve().parent.parent / "node_modules")
+
+
+def _node_env():
+    """Return environment dict with NODE_PATH set so temp scripts find docx."""
+    env = os.environ.copy()
+    env["NODE_PATH"] = _NODE_MODULES
+    return env
+
 
 def _run_node_script(script_path: str) -> bytes:
     """Run a Node.js script that writes a docx buffer to stdout."""
@@ -13,6 +24,7 @@ def _run_node_script(script_path: str) -> bytes:
         ["node", script_path],
         capture_output=True,
         timeout=30,
+        env=_node_env(),
     )
     if result.returncode != 0:
         raise RuntimeError(f"Doc generation failed: {result.stderr.decode()}")
@@ -198,7 +210,8 @@ Packer.toBuffer(doc).then(buf => {{
                 ["node", f.name],
                 capture_output=True,
                 timeout=30,
-                cwd=tempfile.gettempdir(),
+                cwd=_WEB_DIR,
+                env=_node_env(),
             )
             if result.returncode != 0:
                 raise RuntimeError(f"Agenda generation failed: {result.stderr.decode()[:500]}")
@@ -333,7 +346,8 @@ Packer.toBuffer(doc).then(buf => process.stdout.write(buf));
                 ["node", f.name],
                 capture_output=True,
                 timeout=30,
-                cwd=tempfile.gettempdir(),
+                cwd=_WEB_DIR,
+                env=_node_env(),
             )
             if result.returncode != 0:
                 raise RuntimeError(f"Circ form generation failed: {result.stderr.decode()[:500]}")
@@ -630,7 +644,8 @@ Packer.toBuffer(doc).then(buf => process.stdout.write(buf));
                 ["node", f.name],
                 capture_output=True,
                 timeout=30,
-                cwd=tempfile.gettempdir(),
+                cwd=_WEB_DIR,
+                env=_node_env(),
             )
             if result.returncode != 0:
                 raise RuntimeError(f"Modification doc generation failed: {result.stderr.decode()[:500]}")

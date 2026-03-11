@@ -426,6 +426,172 @@ async def unstage_action(request: Request, meeting_id: int, canonical_id: str):
     return RedirectResponse(url=f"/meeting/{meeting_id}/portal", status_code=303)
 
 
+# ==================== GO LIVE MODE ====================
+
+@router.get("/meeting/{meeting_id}/go-live")
+async def go_live(request: Request, meeting_id: int, index: int = 0, edit: int = 0):
+    """Presentation-friendly meeting mode — big text, minimal chrome, auto-advance."""
+    with get_db() as conn:
+        _ensure_tables(conn)
+        meeting = _get_meeting(conn, meeting_id)
+
+        # Get agenda items
+        agenda = [dict(r) for r in conn.execute(queries.AGENDA_ITEMS, (meeting_id,)).fetchall()]
+        if not agenda:
+            return RedirectResponse(url=f"/meeting/{meeting_id}/portal", status_code=303)
+
+        # Get staged actions for this meeting
+        staged = {}
+        for row in conn.execute(
+            "SELECT * FROM sg_action_staging WHERE meeting_id = ?", (meeting_id,)
+        ).fetchall():
+            staged[row["proposal_uid"]] = dict(row)
+
+        # If edit=1, clear the staged action so the form shows
+        if edit and 0 <= index < len(agenda):
+            uid = agenda[index]["proposal_uid"]
+            if uid in staged:
+                conn.execute(
+                    "DELETE FROM sg_action_staging WHERE meeting_id = ? AND proposal_uid = ?",
+                    (meeting_id, uid)
+                )
+                del staged[uid]
+
+        # Load content for current proposal
+        current_index = min(index, len(agenda) - 1)
+        current_uid = agenda[current_index]["proposal_uid"]
+
+        # Proposal text
+        try:
+            content_row = conn.execute(queries.PROPOSAL_TEXT_BY_UID, (current_uid,)).fetchone()
+            if content_row:
+                agenda[current_index]["content"] = dict(content_row)
+            else:
+                agenda[current_index]["content"] = None
+        except Exception:
+            agenda[current_index]["content"] = None
+
+        # Modifications
+        try:
+            sql = queries.MODIFICATIONS_FOR_PROPOSALS.format(placeholders="?")
+            mods = [dict(r) for r in conn.execute(sql, [current_uid]).fetchall()]
+            agenda[current_index]["modifications"] = mods
+        except Exception:
+            agenda[current_index]["modifications"] = []
+
+        # Cross-references
+        try:
+            sql = queries.PROPOSAL_LINKS_FOR_PROPOSALS.format(placeholders="?")
+            links_raw = conn.execute(sql, [current_uid, current_uid]).fetchall()
+            links = []
+            for row in links_raw:
+                row = dict(row)
+                other_id = row["canonical_b"] if row["proposal_uid_a"] == current_uid else row["canonical_a"]
+                links.append({"canonical_id": other_id, "link_type": row["link_type"], "notes": row["notes"]})
+            agenda[current_index]["links"] = links
+        except Exception:
+            agenda[current_index]["links"] = []
+
+        # Annotate all agenda items with staged actions (for nav strip)
+        for item in agenda:
+            item["staged_action"] = staged.get(item["proposal_uid"])
+
+        done_count = sum(1 for a in agenda if a["staged_action"])
+
+        # Load subgroup members for dropdowns
+        members = [dict(r) for r in conn.execute(
+            "SELECT display_name FROM subgroup_members WHERE body = ? ORDER BY last_name, first_name",
+            (meeting["body"],)
+        ).fetchall()]
+
+    templates = request.app.state.templates
+    return templates.TemplateResponse("meeting_golive.html", {
+        "request": request,
+        "meeting": meeting,
+        "agenda": agenda,
+        "current_index": current_index,
+        "total": len(agenda),
+        "done_count": done_count,
+        "recommendations": config.RECOMMENDATIONS,
+        "members": members,
+    })
+
+
+@router.post("/meeting/{meeting_id}/go-live/stage")
+async def go_live_stage(
+    request: Request,
+    meeting_id: int,
+    index: int = 0,
+    canonical_id: str = Form(...),
+    recommendation: str = Form(...),
+    vote_for: int = Form(None),
+    vote_against: int = Form(None),
+    vote_not_voting: int = Form(None),
+    reason: str = Form(""),
+    modification_text: str = Form(""),
+    moved_by: str = Form(""),
+    seconded_by: str = Form(""),
+):
+    """Stage an action from Go Live mode, then redirect to next proposal."""
+    with get_db() as conn:
+        _ensure_tables(conn)
+        meeting = _get_meeting(conn, meeting_id)
+
+        prop = conn.execute(queries.PROPOSAL_UID_BY_CANONICAL, (canonical_id,)).fetchone()
+        if not prop:
+            raise HTTPException(status_code=404, detail=f"Proposal {canonical_id} not found")
+        proposal_uid = prop["proposal_uid"]
+
+        conn.execute("""
+            INSERT INTO sg_action_staging
+                (meeting_id, proposal_uid, canonical_id, subgroup, action_date,
+                 recommendation, vote_for, vote_against, vote_not_voting,
+                 reason, modification_text, moved_by, seconded_by)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(meeting_id, proposal_uid) DO UPDATE SET
+                recommendation = excluded.recommendation,
+                vote_for = excluded.vote_for,
+                vote_against = excluded.vote_against,
+                vote_not_voting = excluded.vote_not_voting,
+                reason = excluded.reason,
+                modification_text = excluded.modification_text,
+                moved_by = excluded.moved_by,
+                seconded_by = excluded.seconded_by
+        """, (
+            meeting_id, proposal_uid, canonical_id,
+            meeting["body"], meeting["meeting_date"],
+            recommendation,
+            vote_for, vote_against, vote_not_voting,
+            reason.strip() or None,
+            modification_text.strip() or None,
+            moved_by.strip() or None,
+            seconded_by.strip() or None,
+        ))
+
+        # Find next unaddressed proposal
+        agenda = [dict(r) for r in conn.execute(queries.AGENDA_ITEMS, (meeting_id,)).fetchall()]
+        staged_uids = set(
+            r["proposal_uid"] for r in conn.execute(
+                "SELECT proposal_uid FROM sg_action_staging WHERE meeting_id = ?", (meeting_id,)
+            ).fetchall()
+        )
+
+    checkpoint()
+
+    # Auto-advance to next un-staged proposal, or stay on current if all done
+    next_index = index + 1
+    for i in range(len(agenda)):
+        candidate = (index + 1 + i) % len(agenda)
+        if agenda[candidate]["proposal_uid"] not in staged_uids:
+            next_index = candidate
+            break
+    else:
+        # All done — go back to current index to show staged result
+        next_index = index
+
+    return RedirectResponse(url=f"/meeting/{meeting_id}/go-live?index={next_index}", status_code=303)
+
+
 # ==================== REVIEW & SEND ====================
 
 @router.get("/meeting/{meeting_id}/review")

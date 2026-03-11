@@ -1,5 +1,6 @@
 """Proposal list and detail routes."""
 from fastapi import APIRouter, Request, HTTPException
+from fastapi.responses import RedirectResponse
 from db.connection import get_db
 from db import queries
 from routes.helpers import render
@@ -72,9 +73,69 @@ async def proposal_detail(request: Request, canonical_id: str):
         ca_actions = [dict(r) for r in conn.execute(queries.PROPOSAL_CA_ACTIONS, (uid,)).fetchall()]
         dq_flags = [dict(r) for r in conn.execute(queries.PROPOSAL_DQ_FLAGS, (uid,)).fetchall()]
 
+        # Load ALL modifications (including unapproved) for secretariat management
+        modifications = [dict(r) for r in conn.execute(
+            queries.MODIFICATIONS_ALL_FOR_PROPOSAL, (uid,)
+        ).fetchall()]
+
     return render(request, "proposal_detail.html", {
         "proposal": proposal,
         "sg_actions": sg_actions,
         "ca_actions": ca_actions,
         "dq_flags": dq_flags,
+        "modifications": modifications,
     })
+
+
+@router.post("/proposals/{canonical_id}/toggle-testing")
+async def toggle_testing(request: Request, canonical_id: str):
+    """Toggle the testing flag on a proposal (secretariat-only)."""
+    user = getattr(request.state, "user", None)
+    if not user or user.get("role") != "secretariat":
+        raise HTTPException(status_code=403, detail="Secretariat only")
+
+    with get_db() as conn:
+        row = conn.execute(
+            "SELECT testing FROM proposals WHERE canonical_id = ?", (canonical_id,)
+        ).fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail=f"Proposal {canonical_id} not found")
+
+        new_val = 0 if row["testing"] else 1
+        conn.execute(
+            "UPDATE proposals SET testing = ? WHERE canonical_id = ?",
+            (new_val, canonical_id),
+        )
+        conn.commit()
+        conn.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+
+    return RedirectResponse(
+        url=f"/proposals/{canonical_id}", status_code=303
+    )
+
+
+@router.post("/proposals/{canonical_id}/toggle-mod-approval/{mod_id}")
+async def toggle_mod_approval(request: Request, canonical_id: str, mod_id: int):
+    """Toggle secretariat_approved on a modification (secretariat-only)."""
+    user = getattr(request.state, "user", None)
+    if not user or user.get("role") != "secretariat":
+        raise HTTPException(status_code=403, detail="Secretariat only")
+
+    with get_db() as conn:
+        row = conn.execute(
+            "SELECT secretariat_approved FROM modifications WHERE id = ?", (mod_id,)
+        ).fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail=f"Modification {mod_id} not found")
+
+        new_val = 0 if row["secretariat_approved"] else 1
+        conn.execute(
+            "UPDATE modifications SET secretariat_approved = ? WHERE id = ?",
+            (new_val, mod_id),
+        )
+        conn.commit()
+        conn.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+
+    return RedirectResponse(
+        url=f"/proposals/{canonical_id}#modifications", status_code=303
+    )

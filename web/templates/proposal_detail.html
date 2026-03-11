@@ -8,7 +8,7 @@
 </div>
 
 <!-- Proposal Header -->
-<div class="card" style="border-left: 4px solid var(--icc-light);">
+<div class="card" style="border-left: 4px solid var(--icc-green);">
     <div style="display: flex; justify-content: space-between; align-items: flex-start;">
         <div>
             <h1 style="color: var(--text-bright); font-size: 1.5rem;">{{ proposal.canonical_id }}</h1>
@@ -16,15 +16,33 @@
                 <span class="badge badge-{{ proposal.track }}">{{ proposal.track|title }}</span>
                 {% if proposal.status == 'Decided' %}<span class="badge badge-decided">Decided</span>
                 {% elif proposal.status == 'Pending' %}<span class="badge badge-pending">Pending</span>
+                {% elif proposal.status == 'Testing' %}<span class="badge badge-testing">Testing</span>
                 {% elif proposal.status == 'Withdrawn' %}<span class="badge badge-withdrawn">Withdrawn</span>
                 {% else %}<span class="badge badge-closed">{{ proposal.status }}</span>{% endif %}
             </p>
         </div>
-        {% if proposal.cdpaccess_url %}
-        <a href="{{ proposal.cdpaccess_url }}" target="_blank" class="btn btn-primary" style="font-size: 0.85rem;">
-            View in cdpACCESS &rarr;
-        </a>
-        {% endif %}
+        <div style="display: flex; gap: 0.5rem; align-items: center;">
+            {% if user and user.role == 'secretariat' %}
+            <form method="POST" action="/proposals/{{ proposal.canonical_id }}/toggle-testing" style="margin: 0;">
+                {% if proposal.testing %}
+                <button type="submit" class="btn btn-sm" style="border-color: #a78bfa; color: #a78bfa;"
+                        title="Remove Testing status">
+                    Remove Testing
+                </button>
+                {% else %}
+                <button type="submit" class="btn btn-sm btn-testing"
+                        title="Mark as Testing — proposal will appear in chair portal for demo purposes">
+                    Mark as Testing
+                </button>
+                {% endif %}
+            </form>
+            {% endif %}
+            {% if proposal.cdpaccess_url %}
+            <a href="{{ proposal.cdpaccess_url }}" target="_blank" class="btn btn-primary" style="font-size: 0.85rem;">
+                View in cdpACCESS &rarr;
+            </a>
+            {% endif %}
+        </div>
     </div>
 
     <div class="grid-3" style="margin-top: 1rem;">
@@ -124,6 +142,55 @@
         {% endif %}
     </div>
 </div>
+
+<!-- Modifications (secretariat-only approval management) -->
+{% if user and user.role == 'secretariat' and modifications %}
+<div class="card" style="margin-top: 1rem;" id="modifications">
+    <div class="card-header">
+        Pre-Submitted Modifications ({{ modifications|length }})
+        <span style="font-size: 0.75rem; font-weight: 400; color: var(--text-muted); margin-left: 0.5rem;">
+            Approved modifications appear in the chair's document selector during meetings
+        </span>
+    </div>
+    {% for mod in modifications %}
+    <div style="padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); {% if not mod.secretariat_approved %}opacity: 0.6;{% endif %}">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                {% if mod.secretariat_approved %}
+                <span class="badge badge-decided" style="font-size: 0.65rem;">APPROVED</span>
+                {% else %}
+                <span class="badge badge-pending" style="font-size: 0.65rem;">NOT APPROVED</span>
+                {% endif %}
+                {% if mod.submitted_by %}<strong style="font-size: 0.85rem;">{{ mod.submitted_by }}</strong>{% endif %}
+                {% if mod.submitted_date %}<span class="text-muted text-xs">{{ mod.submitted_date }}</span>{% endif %}
+                <span class="text-muted text-xs">Status: {{ mod.status }}</span>
+            </div>
+            <form method="POST" action="/proposals/{{ proposal.canonical_id }}/toggle-mod-approval/{{ mod.id }}" style="margin: 0;">
+                {% if mod.secretariat_approved %}
+                <button type="submit" class="btn btn-xs" style="border-color: var(--danger); color: var(--danger);"
+                        title="Revoke approval — this modification will be hidden from chairs">
+                    Revoke Approval
+                </button>
+                {% else %}
+                <button type="submit" class="btn btn-xs btn-primary"
+                        title="Approve — this modification will appear in the chair's document selector">
+                    Approve for Meetings
+                </button>
+                {% endif %}
+            </form>
+        </div>
+        <div class="mod-rich" style="background: var(--bg-input); padding: 0.5rem; border-radius: 4px; font-family: monospace; font-size: 0.85rem; max-height: 200px; overflow-y: auto;">
+            {{ mod.modification_html|safe }}
+        </div>
+        {% if mod.reason_text %}
+        <div style="margin-top: 0.3rem; font-size: 0.8rem; color: var(--text-muted);">
+            <strong>Reason:</strong> {{ mod.reason_text[:300] }}{% if mod.reason_text|length > 300 %}...{% endif %}
+        </div>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
 
 <!-- Data Quality Flags -->
 {% if dq_flags %}

@@ -39,6 +39,11 @@
             <div class="progress-fill" style="width: {{ ((done_count / total * 100) if total > 0 else 0)|round(0)|int }}%;"></div>
         </div>
         <div class="progress-text" id="progress-text">{{ done_count }} / {{ total }} actions recorded</div>
+        {% if not is_completed %}
+        <a href="/meeting/{{ meeting.id }}/go-live" class="btn btn-primary btn-sm" style="margin-left: 1rem; white-space: nowrap;">
+            &#9654; Go Live
+        </a>
+        {% endif %}
     </div>
     {% endif %}
 </div>
@@ -325,22 +330,19 @@
             </details>
             {% endif %}
 
-            {# === PRE-SUBMITTED MODIFICATIONS === #}
+            {# === PRE-SUBMITTED MODIFICATIONS (approved by secretariat) === #}
             {% if item.modifications %}
             <details class="mod-panel">
                 <summary class="proposal-text-toggle">
-                    Pre-Submitted Modifications ({{ item.modifications|length }})
+                    Approved Modifications ({{ item.modifications|length }})
+                    <span class="text-xs text-muted" style="font-weight: 400;">&mdash; approved by secretariat</span>
                 </summary>
                 {% for mod in item.modifications %}
                 <div class="mod-submitted">
                     <div class="mod-submitted-header">
                         {% if mod.submitted_by %}<strong>{{ mod.submitted_by }}</strong>{% endif %}
                         {% if mod.submitted_date %}<span class="text-muted text-xs">{{ mod.submitted_date }}</span>{% endif %}
-                        <button type="button" class="btn btn-xs btn-primary load-mod-btn"
-                                data-mod-html="{{ mod.modification_html|e }}"
-                                onclick="loadModIntoQuill(this)">
-                            Load into Editor
-                        </button>
+                        <span class="badge badge-decided" style="font-size: 0.6rem;">APPROVED</span>
                     </div>
                     <div class="mod-submitted-body mod-rich">
                         {{ mod.modification_html|safe }}
@@ -425,13 +427,25 @@
                     <label class="form-label">
                         Modification Text
                         <span class="text-muted text-xs">(use toolbar for <u>underline</u> = additions, <s>strikethrough</s> = deletions)</span>
-                        {% if item.content and item.content.proposal_html %}
-                        <button type="button" class="btn btn-xs load-proposal-btn" style="margin-left: 0.5rem;"
-                                onclick="loadProposalIntoQuill(this)">
-                            Load Original Proposal Text
-                        </button>
-                        {% endif %}
                     </label>
+                    {% if (item.content and item.content.proposal_html) or item.modifications %}
+                    <div class="doc-selector" style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                        <select class="form-select doc-select" style="max-width: 400px; font-size: 0.85rem;"
+                                onchange="loadSelectedDoc(this)">
+                            <option value="">— Select a document to load —</option>
+                            {% if item.content and item.content.proposal_html %}
+                            <option value="__original__">Original Proposal Text</option>
+                            {% endif %}
+                            {% for mod in item.modifications %}
+                            <option value="mod_{{ mod.id }}"
+                                    data-mod-html="{{ mod.modification_html|e }}">
+                                Modification{% if item.modifications|length > 1 %} {{ loop.index }}{% endif %}{% if mod.submitted_by %} — {{ mod.submitted_by }}{% endif %}{% if mod.submitted_date %} ({{ mod.submitted_date }}){% endif %}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <span class="text-xs text-muted" style="white-space: nowrap;">Approved by Secretariat</span>
+                    </div>
+                    {% endif %}
                     <input type="hidden" name="modification_text" class="mod-hidden-input" value="">
                     <div class="quill-editor" style="min-height: 120px;"
                          {% if item.content %}data-proposal-html="{{ item.content.proposal_html|e }}"{% endif %}></div>
@@ -642,76 +656,58 @@ function updateIndexChips() {
     });
 }
 
-// ===== LOAD proposal text into Quill editor =====
-function loadProposalIntoQuill(btn) {
-    const form = btn.closest('form');
-    const editorDiv = form.querySelector('.quill-editor');
-    if (!editorDiv) return;
+// ===== LOAD selected document from dropdown into Quill editor =====
+function loadSelectedDoc(selectEl) {
+    if (!selectEl.value) return;
 
-    // Get the stored proposal HTML
-    const proposalHtml = editorDiv.dataset.proposalHtml;
-    if (!proposalHtml) return;
-
-    // Ensure Quill is initialized
-    initQuillInForm(form);
-    const quill = editorDiv.__quill;
-    if (!quill) return;
-
-    // Decode HTML entities and set content
-    const tmp = document.createElement('textarea');
-    tmp.innerHTML = proposalHtml;
-    const decoded = tmp.value;
-
-    if (confirm('Load the original proposal text into the editor? This will replace any existing content.')) {
-        quill.root.innerHTML = decoded;
-        btn.textContent = 'Loaded';
-        btn.classList.add('btn-success');
-        setTimeout(() => { btn.textContent = 'Load Original Proposal Text'; btn.classList.remove('btn-success'); }, 1500);
+    const form = selectEl.closest('form');
+    if (!form) {
+        // If called from the mod-panel area (not inside a form), find the action form
+        const card = selectEl.closest('.action-card');
+        if (card) form = card.querySelector('form.action-form');
     }
-}
-
-// ===== LOAD pre-submitted modification into Quill editor =====
-function loadModIntoQuill(btn) {
-    const card = btn.closest('.action-card');
-    if (!card) return;
-
-    const form = card.querySelector('form.action-form');
     if (!form) return;
 
     // Show the mod group and init Quill
     const modGroup = form.querySelector('.mod-group');
     if (modGroup) modGroup.style.display = 'block';
 
-    // Set recommendation to "Approved as Modified" if not already set
-    const select = form.querySelector('select[name="recommendation"]');
-    if (select && !select.value.includes('Modified')) {
-        select.value = 'Approved as Modified';
-    }
-
     initQuillInForm(form);
     const editorDiv = form.querySelector('.quill-editor');
     const quill = editorDiv ? editorDiv.__quill : null;
     if (!quill) return;
 
-    // Get the mod HTML from the button's data attribute
-    const modHtml = btn.dataset.modHtml;
-    if (!modHtml) return;
+    if (selectEl.value === '__original__') {
+        // Load original proposal text
+        const proposalHtml = editorDiv.dataset.proposalHtml;
+        if (!proposalHtml) return;
+        const tmp = document.createElement('textarea');
+        tmp.innerHTML = proposalHtml;
+        quill.root.innerHTML = tmp.value;
+    } else {
+        // Load a pre-submitted modification — set rec to AM
+        const recSelect = form.querySelector('select[name="recommendation"]');
+        if (recSelect && !recSelect.value.includes('Modified')) {
+            recSelect.value = 'Approved as Modified';
+        }
+        const option = selectEl.options[selectEl.selectedIndex];
+        const modHtml = option.dataset.modHtml;
+        if (!modHtml) return;
+        const tmp = document.createElement('textarea');
+        tmp.innerHTML = modHtml;
+        quill.root.innerHTML = tmp.value;
+    }
 
-    const tmp = document.createElement('textarea');
-    tmp.innerHTML = modHtml;
-    const decoded = tmp.value;
-
-    quill.root.innerHTML = decoded;
-    btn.textContent = 'Loaded';
-    btn.classList.add('btn-success');
-    setTimeout(() => { btn.textContent = 'Load into Editor'; btn.classList.remove('btn-success'); }, 1500);
+    // Flash confirmation
+    selectEl.style.borderColor = 'var(--success)';
+    setTimeout(() => { selectEl.style.borderColor = ''; }, 1000);
 }
 </script>
 
 <style>
 /* Portal-specific styles */
 .breadcrumb { margin-bottom: 1rem; font-size: 0.9rem; }
-.breadcrumb a { color: var(--icc-light); }
+.breadcrumb a { color: var(--icc-green); }
 .breadcrumb .bc-sep { color: var(--text-muted); margin: 0 0.5rem; }
 
 .btn-group { display: flex; gap: 0.5rem; flex-wrap: wrap; }
@@ -725,7 +721,7 @@ function loadModIntoQuill(btn) {
 .text-muted { color: var(--text-muted); }
 .text-warning { color: var(--warning); }
 
-.proposal-link { font-weight: 600; color: var(--icc-light); }
+.proposal-link { font-weight: 600; color: var(--icc-green); }
 .rec-text { color: var(--success); font-weight: 600; font-size: 0.85rem; }
 
 .empty-state { text-align: center; padding: 2rem; color: var(--text-muted); }
@@ -749,7 +745,7 @@ function loadModIntoQuill(btn) {
     text-decoration: none;
     transition: all 0.15s;
 }
-.index-chip:hover { border-color: var(--icc-light); color: var(--text-bright); }
+.index-chip:hover { border-color: var(--icc-green); color: var(--text-bright); }
 .index-chip.index-done {
     background: var(--success-bg);
     border-color: var(--success);
@@ -777,44 +773,38 @@ function loadModIntoQuill(btn) {
 /* Existing styles carried over */
 .staged-row td { opacity: 0.7; }
 .staged-row td:nth-child(5) { opacity: 1; }
-.drag-over { border-top: 2px solid var(--icc-light) !important; }
+.drag-over { border-top: 2px solid var(--icc-green) !important; }
 .agenda-row { transition: opacity 0.2s; }
 
-/* Quill dark theme overrides */
+/* Quill editor styling */
 .ql-toolbar.ql-snow { background: var(--bg-input); border-color: var(--border); border-radius: var(--radius) var(--radius) 0 0; }
-.ql-container.ql-snow { border-color: var(--border); border-radius: 0 0 var(--radius) var(--radius); background: var(--bg-input); color: var(--text); font-family: "Courier New", monospace; font-size: 0.9rem; }
+.ql-container.ql-snow { border-color: var(--border); border-radius: 0 0 var(--radius) var(--radius); background: #ffffff; color: var(--text); font-family: "Courier New", monospace; font-size: 0.9rem; }
 .ql-editor { min-height: 100px; line-height: 1.6; }
 .ql-editor.ql-blank::before { color: var(--text-muted); font-style: italic; }
 .ql-snow .ql-stroke { stroke: var(--text-muted); }
 .ql-snow .ql-fill { fill: var(--text-muted); }
 .ql-snow .ql-picker-label { color: var(--text-muted); }
-.ql-snow .ql-picker-options { background: var(--bg-card); border-color: var(--border); }
-.ql-snow button:hover .ql-stroke, .ql-snow button.ql-active .ql-stroke { stroke: var(--icc-light); }
-.ql-snow button:hover .ql-fill, .ql-snow button.ql-active .ql-fill { fill: var(--icc-light); }
-
-/* Rich modification text display */
-.mod-rich { font-family: "Courier New", monospace; font-size: 0.85rem; }
-.mod-rich u, .mod-rich ins { text-decoration: underline; text-decoration-color: var(--success); color: var(--success); }
-.mod-rich s, .mod-rich del { text-decoration: line-through; text-decoration-color: var(--danger); color: var(--danger); opacity: 0.8; }
-.mod-rich p { margin: 0.2rem 0; }
+.ql-snow .ql-picker-options { background: #ffffff; border-color: var(--border); }
+.ql-snow button:hover .ql-stroke, .ql-snow button.ql-active .ql-stroke { stroke: var(--icc-green); }
+.ql-snow button:hover .ql-fill, .ql-snow button.ql-active .ql-fill { fill: var(--icc-green); }
 
 /* Content badges on card headers */
-.badge-content { background: #1a5c3a; color: #6ee7b7; font-size: 0.6rem; padding: 0.1rem 0.35rem; border-radius: 3px; margin-left: 0.4rem; vertical-align: middle; }
-.badge-mod-available { background: #5c1a5c; color: #e7b7e7; font-size: 0.6rem; padding: 0.1rem 0.35rem; border-radius: 3px; margin-left: 0.3rem; vertical-align: middle; }
+.badge-content { background: #f0fdf4; color: #166534; font-size: 0.6rem; padding: 0.1rem 0.35rem; border-radius: 3px; margin-left: 0.4rem; vertical-align: middle; border: 1px solid #86efac; }
+.badge-mod-available { background: #f5f3ff; color: #7c3aed; font-size: 0.6rem; padding: 0.1rem 0.35rem; border-radius: 3px; margin-left: 0.3rem; vertical-align: middle; border: 1px solid #c4b5fd; }
 
 /* Proposal text panel */
 .proposal-text-panel { margin-bottom: 0.75rem; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
-.proposal-text-toggle { padding: 0.5rem 0.75rem; cursor: pointer; font-size: 0.85rem; font-weight: 600; color: var(--text); background: rgba(255,255,255,0.03); }
-.proposal-text-toggle:hover { background: rgba(255,255,255,0.06); }
-.proposal-text-body { padding: 0.75rem; max-height: 300px; overflow-y: auto; background: rgba(0,0,0,0.15); border-top: 1px solid var(--border); line-height: 1.6; }
-.proposal-reason { padding: 0.5rem 0.75rem; border-top: 1px solid var(--border); background: rgba(255,255,255,0.02); }
+.proposal-text-toggle { padding: 0.5rem 0.75rem; cursor: pointer; font-size: 0.85rem; font-weight: 600; color: var(--text); background: var(--bg-input); }
+.proposal-text-toggle:hover { background: #e9ecef; }
+.proposal-text-body { padding: 0.75rem; max-height: 300px; overflow-y: auto; background: #fafbfc; border-top: 1px solid var(--border); line-height: 1.6; }
+.proposal-reason { padding: 0.5rem 0.75rem; border-top: 1px solid var(--border); background: var(--bg-input); }
 
 /* Pre-submitted modification panel */
-.mod-panel { margin-bottom: 0.75rem; border: 1px solid #5c1a5c; border-radius: var(--radius); overflow: hidden; }
-.mod-submitted { padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--border); }
+.mod-panel { margin-bottom: 0.75rem; border: 1px solid #c4b5fd; border-radius: var(--radius); overflow: hidden; }
+.mod-submitted { padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--border-light); }
 .mod-submitted:last-child { border-bottom: none; }
 .mod-submitted-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.4rem; }
-.mod-submitted-body { max-height: 200px; overflow-y: auto; background: rgba(0,0,0,0.1); padding: 0.5rem; border-radius: 4px; }
+.mod-submitted-body { max-height: 200px; overflow-y: auto; background: #fafbfc; padding: 0.5rem; border-radius: 4px; }
 
 /* Cross-reference chips */
 .cross-refs { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.75rem; padding: 0.4rem 0; }
@@ -823,10 +813,10 @@ function loadModIntoQuill(btn) {
     display: inline-flex; align-items: center; gap: 0.3rem;
     padding: 0.15rem 0.5rem; border-radius: 4px;
     font-size: 0.75rem; font-weight: 600;
-    background: rgba(46, 117, 182, 0.1); border: 1px solid rgba(46, 117, 182, 0.3);
-    color: var(--icc-light); text-decoration: none; transition: all 0.15s;
+    background: rgba(11, 89, 64, 0.06); border: 1px solid rgba(11, 89, 64, 0.2);
+    color: var(--icc-green); text-decoration: none; transition: all 0.15s;
 }
-.cross-ref-chip:hover { background: rgba(46, 117, 182, 0.2); border-color: var(--icc-light); }
+.cross-ref-chip:hover { background: rgba(11, 89, 64, 0.12); border-color: var(--icc-green); text-decoration: none; }
 .cross-ref-type { font-size: 0.6rem; color: var(--text-muted); font-weight: 400; }
 
 /* Load buttons */

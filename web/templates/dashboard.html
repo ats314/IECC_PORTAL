@@ -26,6 +26,21 @@
 {% endfor %}
 </div>
 
+<!-- Testing Proposals Banner -->
+{% set total_testing = counts.get('commercial', {}).get('testing', 0)|default(0) + counts.get('residential', {}).get('testing', 0)|default(0) %}
+{% if total_testing > 0 %}
+<div class="card" style="margin-top: 1rem; border-left: 3px solid #a78bfa; background: rgba(139, 92, 246, 0.05);">
+    <div class="section-header">
+        <h2 style="color: #a78bfa;">Testing Mode: {{ total_testing }} proposals marked for demo</h2>
+    </div>
+    <p class="text-muted" style="font-size: 0.9rem;">
+        These proposals appear alongside Pending in the chair portal but are visually tagged as Testing.
+        Commercial: {{ counts.get('commercial', {}).get('testing', 0)|default(0) }} &bull;
+        Residential: {{ counts.get('residential', {}).get('testing', 0)|default(0) }}
+    </p>
+</div>
+{% endif %}
+
 <!-- In-Progress Meetings (subgroups currently meeting) -->
 {% if in_progress_meetings %}
 <div class="card" style="margin-top: 1rem; border-left: 3px solid var(--warning);">
@@ -107,7 +122,7 @@
     <div class="card">
         <div class="card-header">Pending Proposals by Subgroup</div>
         {% for track_name in ['commercial', 'residential'] %}
-        <h3 style="color: var(--icc-light); font-size: 0.9rem; margin: 0.75rem 0 0.5rem;">{{ track_name|title }}</h3>
+        <h3 style="color: var(--icc-green); font-size: 0.9rem; margin: 0.75rem 0 0.5rem;">{{ track_name|title }}</h3>
         {% if pending_by_subgroup.get(track_name) %}
         <table class="data-table">
             <thead><tr><th>Subgroup</th><th>Count</th></tr></thead>
@@ -165,7 +180,7 @@
             <td><a href="/proposals/{{ f.canonical_id }}">{{ f.canonical_id }}</a></td>
             <td><span class="badge badge-{{ f.track }}">{{ f.track[:3]|upper }}</span></td>
             <td>{{ f.flag_type }}</td>
-            <td class="text-muted text-sm">{{ f.details or '' }}</td>
+            <td class="text-muted text-sm">{{ f.raw_value or '' }}</td>
         </tr>
         {% endfor %}
         </tbody>
