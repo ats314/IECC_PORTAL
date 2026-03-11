@@ -779,6 +779,116 @@ a:hover { color: #0870c4; text-decoration: underline; }
     box-shadow: var(--shadow-md);
 }
 
+/* === TEAMS EMBEDDED === */
+.teams-toolbar {
+    background: var(--icc-green);
+    padding: 0.4rem 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 2px solid var(--icc-teal);
+    min-height: 36px;
+}
+.teams-toolbar-left { display: flex; align-items: center; gap: 0.5rem; min-width: 0; }
+.teams-toolbar-text { color: #fff; font-size: 0.8rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.teams-toolbar-right { display: flex; align-items: center; gap: 0.4rem; flex-shrink: 0; }
+
+body.teams-embedded {
+    font-size: 0.85rem;
+}
+body.teams-embedded .container {
+    max-width: 100%;
+    padding: 0.5rem 0.75rem;
+}
+body.teams-embedded .card {
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+body.teams-embedded .portal-header {
+    padding: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+body.teams-embedded .portal-header h1 {
+    font-size: 1.1rem;
+}
+body.teams-embedded .action-card {
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+body.teams-embedded .action-card-title {
+    font-size: 0.95rem;
+}
+body.teams-embedded .form-row {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+}
+body.teams-embedded .send-bar {
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.75rem;
+}
+body.teams-embedded .send-bar .btn-group {
+    flex-direction: column;
+    width: 100%;
+}
+body.teams-embedded .send-bar .btn {
+    width: 100%;
+    text-align: center;
+}
+body.teams-embedded .data-table {
+    font-size: 0.8rem;
+}
+body.teams-embedded .data-table th {
+    padding: 0.4rem 0.5rem;
+    font-size: 0.7rem;
+}
+body.teams-embedded .data-table td {
+    padding: 0.35rem 0.5rem;
+}
+body.teams-embedded .breadcrumb {
+    font-size: 0.8rem;
+    margin-bottom: 0.5rem;
+}
+body.teams-embedded .section-header h2 {
+    font-size: 1rem;
+}
+body.teams-embedded .grid-4,
+body.teams-embedded .grid-3,
+body.teams-embedded .grid-2 {
+    grid-template-columns: 1fr;
+}
+body.teams-embedded .filter-bar {
+    flex-direction: column;
+    padding: 0.5rem;
+    gap: 0.5rem;
+}
+body.teams-embedded .filter-bar .form-select,
+body.teams-embedded .filter-bar .form-input {
+    width: 100%;
+    min-width: unset;
+}
+body.teams-embedded .progress-bar {
+    height: 5px;
+}
+body.teams-embedded .ql-toolbar {
+    padding: 4px;
+}
+body.teams-embedded .ql-toolbar button {
+    width: 22px;
+    height: 22px;
+}
+body.teams-embedded .ql-editor {
+    min-height: 60px;
+    font-size: 0.85rem;
+}
+body.teams-embedded .index-chips {
+    gap: 0.25rem;
+}
+body.teams-embedded .index-chip {
+    font-size: 0.65rem;
+    padding: 0.15rem 0.4rem;
+}
+
 /* === RESPONSIVE === */
 @media (max-width: 1024px) {
     .grid-4 { grid-template-columns: repeat(2, 1fr); }

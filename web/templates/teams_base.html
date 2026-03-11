@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}ICC Portal — Teams{% endblock %}</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="stylesheet" href="/static/css/main.css">
+    <script src="/static/js/htmx.min.js"></script>
+    <script src="https://res.cdn.office.net/teams-js/2.49.0/js/MicrosoftTeams.min.js"></script>
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="teams-embedded">
+    {# No navbar — maximize vertical space in 280px Teams side panel #}
+
+    {# Compact Teams toolbar: meeting info + share button #}
+    <div class="teams-toolbar" id="teams-toolbar">
+        <div class="teams-toolbar-left">
+            {% block teams_title %}
+            <span class="teams-toolbar-text">ICC Portal</span>
+            {% endblock %}
+        </div>
+        <div class="teams-toolbar-right">
+            <button class="btn btn-sm btn-primary" id="teams-share-btn" style="display: none;"
+                    onclick="teamsShareToStage()">
+                Share to Stage
+            </button>
+            <button class="btn btn-sm btn-danger" id="teams-stop-btn" style="display: none;"
+                    onclick="teamsStopSharing()">
+                Stop Sharing
+            </button>
+        </div>
+    </div>
+
+    <main class="container">
+        {% block content %}{% endblock %}
+    </main>
+
+    {# No footer #}
+
+    <script src="/static/js/teams-init.js"></script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>
