@@ -1,4 +1,4 @@
-{% extends "chair_base.html" %}
+{% extends base_template|default("chair_base.html") %}
 {% set active = "home" %}
 {% block title %}My Meetings — ICC Code Development Platform{% endblock %}
 
