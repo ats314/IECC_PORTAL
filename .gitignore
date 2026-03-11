@@ -1,13 +1,10 @@
-# Database files
-iecc.db
-iecc.db-wal
-iecc.db-shm
-iecc.db-journal
+# Database WAL/journal files (iecc.db tracked via Git LFS)
 *.db-wal
 *.db-shm
 *.db-journal
+iecc_test.db
 
-# Large data directories
+# Large data directories (source files, not code)
 ARCHIVES/
 2027_RESIDENTIAL/
 2027_COMMERCIAL/
@@ -15,6 +12,9 @@ IECC standard/
 Proposal_Text_Sources/
 Residential/
 ICC JSON FILES/
+FUSE/
+2026-*/
+2027 IECC*/
 remove this/
 
 # Python
@@ -34,9 +34,6 @@ env/
 
 # Generated files
 web/generated/
-web/iecc.db
-web/iecc.db-journal
-web/iecc.db-wal
 
 # OneDrive sync archives (large zip files)
 OneDrive_*.zip
@@ -60,8 +57,9 @@ Thumbs.db
 # Claude agent working files
 .claude/
 
-# Skills update staging (local workflow only)
+# Skills (managed via Claude plugin system)
 skills-update/
+*.skill
 
 # Loose document files in root (source data, not code)
 *.docx

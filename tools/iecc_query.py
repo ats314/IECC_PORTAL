@@ -26,7 +26,7 @@ import sqlite3
 import argparse
 from pathlib import Path
 
-BASE = Path(__file__).parent
+BASE = Path(__file__).parent.parent
 DB_PATH = str(BASE / "iecc.db")
 
 ACTIVE_PHASES = ('CODE_PROPOSAL', 'PUBLIC_COMMENT')

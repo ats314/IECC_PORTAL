@@ -10,7 +10,7 @@ import sqlite3, json, sys, os
 from datetime import datetime
 from pathlib import Path
 
-BASE = Path(__file__).parent
+BASE = Path(__file__).parent.parent
 DB_PATH = str(BASE / "iecc.db")
 SNAP_DIR = BASE / ".snapshots"
 

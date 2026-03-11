@@ -125,8 +125,8 @@ web/
 
 **Database:**
 - `iecc.db` must exist one directory up (`../iecc.db` relative to `web/`)
-- Contains commercial + residential proposals (run `python3 iecc_preflight.py` from parent dir for live counts)
-- See `AGENT_GUIDE.md` in parent directory for full schema
+- Contains commercial + residential proposals (run `python3 tools/iecc_preflight.py` from parent dir for live counts)
+- See `docs/AGENT_GUIDE.md` in parent directory for full schema
 
 ## Environment Variables
 

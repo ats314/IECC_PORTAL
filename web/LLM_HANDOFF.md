@@ -8,8 +8,8 @@
 1. Read `web/README.md` — what the app is, how to run it, file structure
 2. Read `web/ARCHITECTURE.md` — request lifecycle, auth system, template inheritance, DB tables
 3. Read `web/DEVELOPMENT.md` — what's built, what's NOT built, known issues, code patterns
-4. Read `AGENT_GUIDE.md` (parent dir) — database schema, domain knowledge, naming traps
-5. Read `PROJECT_MEMORY.md` (parent dir) — full session history, decisions made
+4. Read `docs/AGENT_GUIDE.md` (parent dir) — database schema, domain knowledge, naming traps
+5. Read `docs/PROJECT_MEMORY.md` (parent dir) — full session history, decisions made
 6. Run the server: `cd web && python main.py` (or user double-clicks `start.bat`)
 7. Tell the user: "I've read the project docs. Ready to continue."
 
@@ -53,7 +53,7 @@ The app runs on Alex's Windows machine at localhost:8080. After making changes, 
 Residential meeting body names don't match proposal subgroup names in the database. The mapping in `config.BODY_TO_SUBGROUP` is the bridge. If this breaks, agenda auto-populate returns zero proposals and the portal is useless.
 
 ### 6. UNDERSTAND THE DOCUMENT CHAIN BEFORE TOUCHING PROPOSALS
-Read `AGENT_GUIDE.md → The IECC Code Development Lifecycle` and `The Document Chain` sections. Every proposal modifies the Public Comment Draft (PCD) — the base code text for all active proposals. Proposals show code sections with underline (additions) and strikethrough (deletions) against the PCD. Subgroups may further modify the proposal language. If you don't understand this chain, you will build the wrong thing.
+Read `docs/AGENT_GUIDE.md → The IECC Code Development Lifecycle` and `The Document Chain` sections. Every proposal modifies the Public Comment Draft (PCD) — the base code text for all active proposals. Proposals show code sections with underline (additions) and strikethrough (deletions) against the PCD. Subgroups may further modify the proposal language. If you don't understand this chain, you will build the wrong thing.
 
 ---
 
@@ -125,7 +125,7 @@ Example: "Residential Modeling Subgroup" → "Modeling (SG2)" → "Modeling Subg
 
 ## What Alex Will Likely Ask You To Build Next
 
-Based on conversations from Sessions 21+ (see PROJECT_MEMORY.md and PORTAL_ROADMAP.md for completion status):
+Based on conversations from Sessions 21+ (see docs/PROJECT_MEMORY.md and docs/PORTAL_ROADMAP.md for completion status):
 
 ### SharePoint Azure AD Setup
 Alex needs help setting up the Azure AD app registration to enable SharePoint upload. See the guide at the bottom of `services/sharepoint.py` or in the plan file. The portal works fully without it — the Approve button just skips the upload step.

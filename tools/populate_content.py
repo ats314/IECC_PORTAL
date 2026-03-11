@@ -21,23 +21,24 @@ import hashlib
 import sys
 from datetime import datetime
 
-DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'iecc.db')
-IECC_STD = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'IECC standard')
-PROPOSAL_TEXT_SOURCES = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'Proposal_Text_Sources')
-COMMERCIAL_2027 = os.path.join(os.path.dirname(os.path.abspath(__file__)), '2027_COMMERCIAL')
-RESIDENTIAL_2027 = os.path.join(os.path.dirname(os.path.abspath(__file__)), '2027_RESIDENTIAL')
-ARCHIVES = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'ARCHIVES')
-ONEDRIVE_SYNC = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'OneDrive_1_3-9-2026')
-PC_POSTING_JAN = os.path.join(os.path.dirname(os.path.abspath(__file__)), '2026-01-23 Public Comment Posting')
-PC_POSTING_FEB = os.path.join(os.path.dirname(os.path.abspath(__file__)), '2026-02-13 Public Comment Posting')
-PC_POSTING_MAR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '2026-03-07 Public Comment Posting')
+_PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DB_PATH = os.path.join(_PROJECT_ROOT, 'iecc.db')
+IECC_STD = os.path.join(_PROJECT_ROOT, 'IECC standard')
+PROPOSAL_TEXT_SOURCES = os.path.join(_PROJECT_ROOT, 'Proposal_Text_Sources')
+COMMERCIAL_2027 = os.path.join(_PROJECT_ROOT, '2027_COMMERCIAL')
+RESIDENTIAL_2027 = os.path.join(_PROJECT_ROOT, '2027_RESIDENTIAL')
+ARCHIVES = os.path.join(_PROJECT_ROOT, 'ARCHIVES')
+ONEDRIVE_SYNC = os.path.join(_PROJECT_ROOT, 'OneDrive_1_3-9-2026')
+PC_POSTING_JAN = os.path.join(_PROJECT_ROOT, '2026-01-23 Public Comment Posting')
+PC_POSTING_FEB = os.path.join(_PROJECT_ROOT, '2026-02-13 Public Comment Posting')
+PC_POSTING_MAR = os.path.join(_PROJECT_ROOT, '2026-03-07 Public Comment Posting')
 # Residential public comment DOCX files (4 posting batches)
-PC_DOCS_PARENT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '2027 IECC Public Comment Documents')
+PC_DOCS_PARENT = os.path.join(_PROJECT_ROOT, '2027 IECC Public Comment Documents')
 # OneDrive sync copies (may have additional files)
-ONEDRIVE_2 = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'OneDrive_2_3-9-2026')
-ONEDRIVE_3 = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'OneDrive_3_3-9-2026')
+ONEDRIVE_2 = os.path.join(_PROJECT_ROOT, 'OneDrive_2_3-9-2026')
+ONEDRIVE_3 = os.path.join(_PROJECT_ROOT, 'OneDrive_3_3-9-2026')
 # FUSE folder
-FUSE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'FUSE')
+FUSE = os.path.join(_PROJECT_ROOT, 'FUSE')
 
 # All source folders to scan (in priority order — later folders override earlier ones)
 SOURCE_FOLDERS = [IECC_STD, PROPOSAL_TEXT_SOURCES, COMMERCIAL_2027, RESIDENTIAL_2027, ARCHIVES, ONEDRIVE_SYNC,

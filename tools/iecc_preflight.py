@@ -19,7 +19,8 @@ import glob
 from datetime import datetime
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_PATH = os.path.join(SCRIPT_DIR, 'iecc.db')
+PROJECT_ROOT = os.path.dirname(SCRIPT_DIR)
+DB_PATH = os.path.join(PROJECT_ROOT, 'iecc.db')
 
 TRACKS = {
     'Commercial': 'commercial',
@@ -32,9 +33,9 @@ def cleanup_vm_artifacts():
     These accumulate every session from the FUSE mount layer."""
     import fnmatch
     cleaned = 0
-    for f in os.listdir(SCRIPT_DIR):
+    for f in os.listdir(PROJECT_ROOT):
         if fnmatch.fnmatch(f, '.fuse_hidden*') or f == '__pycache__' or fnmatch.fnmatch(f, '~$*'):
-            path = os.path.join(SCRIPT_DIR, f)
+            path = os.path.join(PROJECT_ROOT, f)
             try:
                 if os.path.isdir(path):
                     import shutil
@@ -236,7 +237,7 @@ def open_dq_flags(label, track):
 
 def recent_snapshot():
     """Find and summarize most recent snapshot."""
-    snap_dir = os.path.join(SCRIPT_DIR, '.snapshots')
+    snap_dir = os.path.join(PROJECT_ROOT, '.snapshots')
     if not os.path.isdir(snap_dir):
         print("\n  No snapshots directory found.")
         return

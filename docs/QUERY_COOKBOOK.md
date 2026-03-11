@@ -3,7 +3,7 @@
 > Ready-to-use queries for common secretariat tasks. Copy-paste into SQLite.
 > All queries run on the unified `iecc.db`. Add `WHERE track = 'commercial'` or `WHERE track = 'residential'` to filter by track.
 > Governance and errata data is commercial-only (`track = 'commercial'`).
-> For quick lookups, use `python3 iecc_query.py --status CEPC28-25` instead.
+> For quick lookups, use `python3 tools/iecc_query.py --status CEPC28-25` instead.
 
 ---
 

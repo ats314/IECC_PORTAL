@@ -9,7 +9,7 @@
 ## Session-Start Checklist
 
 Before doing ANY work, confirm you have completed these steps:
-- [ ] Run `python3 iecc_preflight.py` (DB state, pending, DQ, meetings, doc check)
+- [ ] Run `python3 tools/iecc_preflight.py` (DB state, pending, DQ, meetings, doc check)
 - [ ] Read CLAUDE.md (project structure, hard rules, lessons learned)
 - [ ] Read this file (AGENT_GUIDE.md) — you are here
 - [ ] Read PROJECT_MEMORY.md (session history, known issues)
@@ -46,7 +46,7 @@ A **proposal tracking system** for the 2027 IECC covering both Commercial and Re
 ### The Database
 | File | Notes |
 |------|-------|
-| `iecc.db` | Unified DB, commercial + residential. All tables have `track TEXT NOT NULL` column ('commercial'/'residential'). Run `python3 iecc_preflight.py` for live counts. |
+| `iecc.db` | Unified DB, commercial + residential. All tables have `track TEXT NOT NULL` column ('commercial'/'residential'). Run `python3 tools/iecc_preflight.py` for live counts. |
 
 Original separate databases (`iecc_commercial.db`, `iecc_residential.db`) are archived in `ARCHIVES/backups/pre_merge_20260303/`.
 
@@ -274,7 +274,7 @@ Subgroups review proposals and make recommendations. The Consensus Committee mak
 
 > **Unified schema.** All tables have a `track` column ('commercial'/'residential'). All views include `track` as the first column.
 >
-> **⚠️ ROW COUNTS BELOW ARE APPROXIMATE REFERENCE POINTS, NOT LIVE DATA.** Always run `python3 iecc_preflight.py` or query the DB directly for current counts. Never cite these numbers to Alex as fact without verifying. The DB is the sole source of truth for all IECC proposal data — documentation only teaches you how to query it correctly.
+> **⚠️ ROW COUNTS BELOW ARE APPROXIMATE REFERENCE POINTS, NOT LIVE DATA.** Always run `python3 tools/iecc_preflight.py` or query the DB directly for current counts. Never cite these numbers to Alex as fact without verifying. The DB is the sole source of truth for all IECC proposal data — documentation only teaches you how to query it correctly.
 
 ### Core Tables
 
@@ -426,7 +426,7 @@ SELECT * FROM v_ready_for_consensus WHERE track = 'residential';
 
 ## Current Status
 
-> **⚠️ LIVE COUNTS:** Run `python3 iecc_preflight.py` to get current counts (decided, pending, withdrawn, CA, SA, DQ). For a human-readable summary, see `IECC_STATUS_REPORT.md`. Do NOT hardcode counts in docs — they go stale fast.
+> **⚠️ LIVE COUNTS:** Run `python3 tools/iecc_preflight.py` to get current counts (decided, pending, withdrawn, CA, SA, DQ). For a human-readable summary, see `IECC_STATUS_REPORT.md`. Do NOT hardcode counts in docs — they go stale fast.
 
 ### Key Dates
 | Milestone | Date |

@@ -45,7 +45,7 @@ python main.py     # Any platform
 
 The app runs at **http://localhost:8080**.
 
-The SQLite database (`iecc.db`) is not included in this repo — it contains the live proposal data and must be built separately using the data pipeline scripts.
+The SQLite database (`iecc.db`) is included via Git LFS — it contains the live proposal data (510 proposals across commercial and residential tracks).
 
 ## Project Structure
 
@@ -67,23 +67,24 @@ IECC/
 │   ├── static/                 # CSS + HTMX library
 │   └── db/                     # Connection manager + SQL queries
 │
-├── iecc_startup.py             # Full project startup/health check
-├── iecc_preflight.py           # Quick database verification
-├── iecc_query.py               # CLI query tool for the database
-├── iecc_snapshot.py            # Change detection between sessions
-├── iecc_verify.py              # Documentation-vs-DB consistency check
-├── build_combined_report.py    # XLSX report generator
-├── build_commercial_db.py      # Commercial track data pipeline
-├── build_residential_db.py     # Residential track data pipeline
-├── populate_content.py         # DOCX proposal text extraction pipeline
+├── tools/                      # Python utility scripts
+│   ├── iecc_startup.py         # Full project startup/health check
+│   ├── iecc_preflight.py       # Quick database verification
+│   ├── iecc_query.py           # CLI query tool for the database
+│   ├── iecc_snapshot.py        # Change detection between sessions
+│   ├── iecc_verify.py          # Documentation-vs-DB consistency check
+│   ├── build_combined_report.py # XLSX report generator
+│   ├── populate_content.py     # DOCX proposal text extraction pipeline
+│   └── extract_monograph_markup.py # Monograph PDF text extraction
+│
+├── docs/                       # Project documentation
+│   ├── AGENT_GUIDE.md          # Database schema + domain knowledge
+│   ├── PROJECT_MEMORY.md       # Development session history
+│   ├── PORTAL_ROADMAP.md       # Three-phase development plan
+│   └── QUERY_COOKBOOK.md        # Ready-to-use SQL query patterns
 │
 ├── reference/                  # ICC governance reference data (JSON)
 ├── migrations/                 # SQL schema migrations
-│
-├── AGENT_GUIDE.md              # Database schema + domain knowledge
-├── PORTAL_ROADMAP.md           # Three-phase development plan
-├── QUERY_COOKBOOK.md            # Ready-to-use SQL query patterns
-└── PROJECT_MEMORY.md           # Development session history
 ```
 
 ## The ICC Code Development Process
@@ -102,8 +103,8 @@ This platform manages steps 2-5, replacing spreadsheets and manual document asse
 
 | Document | Purpose |
 |----------|---------|
-| [`AGENT_GUIDE.md`](AGENT_GUIDE.md) | Full database schema, naming conventions, ICC lifecycle |
-| [`PORTAL_ROADMAP.md`](PORTAL_ROADMAP.md) | Three-phase development plan with current status |
+| [`docs/AGENT_GUIDE.md`](docs/AGENT_GUIDE.md) | Full database schema, naming conventions, ICC lifecycle |
+| [`docs/PORTAL_ROADMAP.md`](docs/PORTAL_ROADMAP.md) | Three-phase development plan with current status |
 | [`web/ARCHITECTURE.md`](web/ARCHITECTURE.md) | Technical deep dive: request lifecycle, auth, HTMX patterns |
 | [`web/DEVELOPMENT.md`](web/DEVELOPMENT.md) | What's built, what's next, known issues |
 | [`web/LLM_HANDOFF.md`](web/LLM_HANDOFF.md) | Web app rules and patterns for AI-assisted development |

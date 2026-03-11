@@ -20,7 +20,7 @@ import os
 import re
 from datetime import datetime
 
-DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'iecc.db')
+DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'iecc.db')
 
 # Proposal ID patterns in the monograph
 PROPOSAL_ID_RE = re.compile(

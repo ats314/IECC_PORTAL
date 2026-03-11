@@ -22,7 +22,7 @@ from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
 
-BASE = Path(__file__).parent
+BASE = Path(__file__).parent.parent
 DB_PATH = str(BASE / "iecc.db")
 OUTPUT = str(BASE / "IECC_2027_Combined_Disposition.xlsx")
 

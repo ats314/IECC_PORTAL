@@ -16,9 +16,10 @@ import sys
 import os
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.dirname(SCRIPT_DIR)
 
-DOCS = ['CLAUDE.md', 'AGENT_GUIDE.md', 'PROJECT_MEMORY.md']
-DB_PATH = os.path.join(SCRIPT_DIR, 'iecc.db')
+DOCS = ['CLAUDE.md', 'docs/AGENT_GUIDE.md', 'docs/PROJECT_MEMORY.md']
+DB_PATH = os.path.join(PROJECT_ROOT, 'iecc.db')
 
 def get_db_truth():
     """Pull ground truth from unified database, filtering by track."""
@@ -89,7 +90,7 @@ def check_docs(truth, fix=False):
     # We check each doc independently
 
     for fname in DOCS:
-        fpath = os.path.join(SCRIPT_DIR, fname)
+        fpath = os.path.join(PROJECT_ROOT, fname)
         if not os.path.exists(fpath):
             errors.append(f"{fname}: FILE NOT FOUND")
             continue

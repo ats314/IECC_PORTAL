@@ -24,7 +24,7 @@ from pathlib import Path
 # ============================================================
 # CONFIG
 # ============================================================
-BASE_DIR = Path(__file__).parent
+BASE_DIR = Path(__file__).parent.parent
 DB_PATH = BASE_DIR / "iecc.db"
 WEB_DIR = BASE_DIR / "web"
 PORT = 8080
@@ -32,10 +32,10 @@ PORT = 8080
 # Documentation files to read (in order of priority)
 DOCS = [
     ("CLAUDE.md", "Quick start, hard rules, project structure"),
-    ("AGENT_GUIDE.md", "Schema, domain knowledge, naming conventions, document chain"),
-    ("PROJECT_MEMORY.md", "Session history, decisions, known issues"),
-    ("QUERY_COOKBOOK.md", "Ready SQL queries"),
-    ("PORTAL_ROADMAP.md", "Three-phase portal plan (Phase 1 mostly complete)"),
+    ("docs/AGENT_GUIDE.md", "Schema, domain knowledge, naming conventions, document chain"),
+    ("docs/PROJECT_MEMORY.md", "Session history, decisions, known issues"),
+    ("docs/QUERY_COOKBOOK.md", "Ready SQL queries"),
+    ("docs/PORTAL_ROADMAP.md", "Three-phase portal plan (Phase 1 mostly complete)"),
     ("web/LLM_HANDOFF.md", "Web app handoff — rules, patterns, what to build next"),
     ("web/README.md", "Web app setup, file structure"),
     ("web/ARCHITECTURE.md", "Request lifecycle, auth system, template inheritance"),
