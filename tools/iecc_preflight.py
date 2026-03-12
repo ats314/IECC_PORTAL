@@ -18,6 +18,11 @@ import json
 import glob
 from datetime import datetime
 
+# Force UTF-8 output on Windows (cp1252 can't handle Unicode symbols)
+if sys.platform == 'win32':
+    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+    sys.stderr.reconfigure(encoding='utf-8', errors='replace')
+
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.dirname(SCRIPT_DIR)
 DB_PATH = os.path.join(PROJECT_ROOT, 'iecc.db')

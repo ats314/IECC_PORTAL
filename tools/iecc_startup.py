@@ -21,6 +21,11 @@ import time
 import signal
 from pathlib import Path
 
+# Force UTF-8 output on Windows (cp1252 can't handle Unicode symbols)
+if sys.platform == 'win32':
+    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+    sys.stderr.reconfigure(encoding='utf-8', errors='replace')
+
 # ============================================================
 # CONFIG
 # ============================================================
