@@ -504,6 +504,7 @@ async def go_live(request: Request, meeting_id: int, index: int = 0, edit: int =
             (meeting["body"],)
         ).fetchall()]
 
+    teams_embedded = request.query_params.get("embedded") == "teams"
     templates = request.app.state.templates
     return templates.TemplateResponse("meeting_golive.html", {
         "request": request,
@@ -514,6 +515,7 @@ async def go_live(request: Request, meeting_id: int, index: int = 0, edit: int =
         "done_count": done_count,
         "recommendations": config.RECOMMENDATIONS,
         "members": members,
+        "teams_embedded": teams_embedded,
     })
 
 
@@ -589,7 +591,8 @@ async def go_live_stage(
         # All done — go back to current index to show staged result
         next_index = index
 
-    return RedirectResponse(url=f"/meeting/{meeting_id}/go-live?index={next_index}", status_code=303)
+    embed_param = "&embedded=teams" if request.query_params.get("embedded") == "teams" else ""
+    return RedirectResponse(url=f"/meeting/{meeting_id}/go-live?index={next_index}{embed_param}", status_code=303)
 
 
 # ==================== REVIEW & SEND ====================

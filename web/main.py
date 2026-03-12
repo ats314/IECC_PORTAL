@@ -10,7 +10,7 @@ import config
 # Ensure the web directory is in the path for imports
 sys.path.insert(0, str(Path(__file__).parent))
 
-from routes import auth, dashboard, proposals, meetings, subgroup_portal, exports, circforms
+from routes import auth, dashboard, proposals, meetings, subgroup_portal, exports, circforms, teams
 
 app = FastAPI(
     title=config.APP_TITLE,
@@ -52,9 +52,24 @@ def format_time(time_str):
 templates.env.filters["format_time"] = format_time
 
 
+# --- Teams iframe CSP middleware ---
+@app.middleware("http")
+async def teams_csp_middleware(request: Request, call_next):
+    """Set Content-Security-Policy to allow Teams to embed our portal in an iframe."""
+    response = await call_next(request)
+    response.headers["Content-Security-Policy"] = (
+        "frame-ancestors 'self' "
+        "https://teams.microsoft.com "
+        "https://*.teams.microsoft.com "
+        "https://*.skype.com "
+        "https://*.cloud.microsoft"
+    )
+    return response
+
+
 # --- Authentication middleware ---
 # Public routes that don't need login
-PUBLIC_PATHS = {"/login", "/health", "/static"}
+PUBLIC_PATHS = {"/login", "/health", "/static", "/teams"}
 
 
 @app.middleware("http")
@@ -63,7 +78,7 @@ async def auth_middleware(request: Request, call_next):
     path = request.url.path
 
     # Allow public paths and static files
-    if path in PUBLIC_PATHS or path.startswith("/static"):
+    if path in PUBLIC_PATHS or path.startswith("/static") or path.startswith("/teams"):
         return await call_next(request)
 
     # Check if user is logged in
@@ -100,6 +115,7 @@ app.include_router(meetings.router)
 app.include_router(subgroup_portal.router)
 app.include_router(exports.router)
 app.include_router(circforms.router)
+app.include_router(teams.router)
 
 
 @app.get("/health")

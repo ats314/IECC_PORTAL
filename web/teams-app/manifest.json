@@ -1,0 +1,49 @@
+{
+  "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.17/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.17",
+  "version": "1.0.0",
+  "id": "00000000-0000-0000-0000-000000000000",
+  "developer": {
+    "name": "International Code Council",
+    "websiteUrl": "https://www.iccsafe.org",
+    "privacyUrl": "https://www.iccsafe.org/privacy-policy",
+    "termsOfUseUrl": "https://www.iccsafe.org/terms-of-use"
+  },
+  "name": {
+    "short": "IECC Portal",
+    "full": "IECC 2027 Code Development Portal"
+  },
+  "description": {
+    "short": "Manage subgroup meetings and proposal actions",
+    "full": "The IECC Code Development Portal for subgroup chairs. Run meetings, record votes, stage actions, and generate circulation forms — all from within Teams."
+  },
+  "icons": {
+    "outline": "outline.png",
+    "color": "color.png"
+  },
+  "accentColor": "#0B5940",
+  "configurableTabs": [
+    {
+      "configurationUrl": "https://TUNNEL_DOMAIN/teams/config",
+      "canUpdateConfiguration": true,
+      "scopes": ["groupchat"],
+      "context": [
+        "meetingSidePanel",
+        "meetingStage"
+      ]
+    }
+  ],
+  "validDomains": [
+    "TUNNEL_DOMAIN"
+  ],
+  "authorization": {
+    "permissions": {
+      "resourceSpecific": [
+        {
+          "name": "MeetingStage.Write.Chat",
+          "type": "Delegated"
+        }
+      ]
+    }
+  }
+}
