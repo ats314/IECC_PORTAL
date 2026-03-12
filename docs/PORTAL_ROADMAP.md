@@ -51,7 +51,7 @@ I read both meetings end-to-end — the Modeling SG2 meeting (March 3, 2026, ~2.
 
 ### Phase 1: Get Proposal Language Into the Portal (Weeks 1-2) — ✅ MOSTLY COMPLETE (Session 29-30)
 
-> **Status:** Steps 1-4 done. 178/510 proposals have extracted text with ICC markup. Portal pre-loads code language, modifications, and cross-references. 26% coverage gap remains (PUBLIC_INPUT phase proposals lack DOCX files).
+> **Status:** Steps 1-4 done. Query `SELECT COUNT(*) FROM proposal_text` for current coverage. Portal pre-loads code language, modifications, and cross-references. Coverage gap remains for PUBLIC_INPUT phase proposals (lack DOCX files). Monograph PDF extraction added in Session 34 covers 39 additional proposals.
 
 This is the foundation. Everything else depends on chairs being able to see the actual proposal text in the portal instead of switching to cdpACCESS.
 
@@ -82,7 +82,7 @@ This is the foundation. Everything else depends on chairs being able to see the 
 
 ### Phase 2: Handle Modifications and Meeting Actions (Weeks 3-5) — PARTIALLY DONE
 
-> **Status:** Step 8 (cross-reference tracking) done — 258 auto-detected proposal links in DB, cross-reference chips in portal. Steps 5-7 partially done (modification ingestion built via populate_content.py, 102 modifications in DB, Quill editor loads them). Step 6 (meeting action capture redesign for "further modified" / combined consideration) NOT YET DONE.
+> **Status:** Step 5 (modification ingestion) done — modifications in DB, loaded in portal with provenance + secretariat approval workflow. Step 7 (reason statement workflow) done — pre-populated, editable. Step 8 (cross-reference tracking) done — auto-detected proposal links in DB, cross-reference chips in portal. **Step 6 (meeting action capture redesign for "further modified" / combined consideration) NOT YET DONE** — this is the main remaining gap.
 
 This is where the portal starts doing real work during meetings.
 
@@ -146,6 +146,18 @@ This is where Alex's workload drops dramatically.
 - One-click view of all linked/related proposals for the meeting's agenda items
 
 **What this gives you:** Post-meeting work goes from "manually type everything into forms and generate documents from scratch" to "review what the system extracted, correct any errors, click generate."
+
+---
+
+## Cross-Cutting Features (Built Outside the Phase Plan)
+
+These features were built in Sessions 33-34 and cut across multiple phases:
+
+- **"Go Live" meeting mode** (`/meeting/{id}/go-live`) — full-viewport presentation view for Teams screen sharing. Keyboard shortcuts, auto-advance, timer, readiness badges. Addresses the "chairs overwhelmed by document juggling" problem identified in the transcript analysis above.
+- **Testing mode** — secretariat can flag proposals for demo without affecting production data.
+- **Modification approval workflow** — secretariat approves modifications before chairs see them in the portal.
+- **All chair accounts** — 14 chairs across all subgroups and consensus committees (both tracks).
+- **ICC brand theme** — CSS variables applied across all templates.
 
 ---
 
