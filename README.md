@@ -79,10 +79,12 @@ IECC/
 │
 ├── docs/                       # Project documentation
 │   ├── AGENT_GUIDE.md          # Database schema + domain knowledge
-│   ├── PROJECT_MEMORY.md       # Development session history
+│   ├── PROJECT_MEMORY.md       # Development session history (36 sessions)
 │   ├── PORTAL_ROADMAP.md       # Three-phase development plan
-│   └── QUERY_COOKBOOK.md        # Ready-to-use SQL query patterns
+│   ├── QUERY_COOKBOOK.md        # Ready-to-use SQL query patterns
+│   └── IECC_STATUS_REPORT.md   # Current proposal status summary
 │
+├── approved_circforms/         # Auto-organized approved circ forms (gitignored)
 ├── reference/                  # ICC governance reference data (JSON)
 ├── migrations/                 # SQL schema migrations
 ```
@@ -103,21 +105,33 @@ This platform manages steps 2-5, replacing spreadsheets and manual document asse
 
 | Document | Purpose |
 |----------|---------|
+| [`CLAUDE.md`](CLAUDE.md) | Agent onboarding, hard rules, project structure |
 | [`docs/AGENT_GUIDE.md`](docs/AGENT_GUIDE.md) | Full database schema, naming conventions, ICC lifecycle |
+| [`docs/PROJECT_MEMORY.md`](docs/PROJECT_MEMORY.md) | Complete development history across 36 sessions |
 | [`docs/PORTAL_ROADMAP.md`](docs/PORTAL_ROADMAP.md) | Three-phase development plan with current status |
-| [`web/ARCHITECTURE.md`](web/ARCHITECTURE.md) | Technical deep dive: request lifecycle, auth, HTMX patterns |
+| [`web/ARCHITECTURE.md`](web/ARCHITECTURE.md) | Request lifecycle, auth system, HTMX patterns |
 | [`web/DEVELOPMENT.md`](web/DEVELOPMENT.md) | What's built, what's next, known issues |
 | [`web/LLM_HANDOFF.md`](web/LLM_HANDOFF.md) | Web app rules and patterns for AI-assisted development |
 
+## Key Features
+
+- **Meeting portal** with real-time action staging, HTMX-powered inline editing, and progress tracking
+- **"Go Live" mode** — full-viewport presentation view for Teams screen sharing with keyboard shortcuts
+- **Circulation form pipeline** — auto-generates circ form documents when chairs finalize meetings
+- **Approved docs auto-organize** — copies approved circ forms to SharePoint-matching folder structure for drag-and-drop upload
+- **Document exports** — agenda, circulation form, and modification documents (Word format)
+- **Modification workflow** — secretariat approval of modifications before chairs see them
+- **16 user accounts** — 2 secretariat, 14 subgroup chairs across both tracks
+
 ## Development Status
 
-This is an active internal tool. Current state:
+This is an active internal tool in production use. Current state:
 
 - **Phase 1** (proposal content in portal): Mostly complete — 178/510 proposals have extracted text with ICC markup
-- **Phase 2** (meeting actions + modifications): Partially complete — action staging, modification ingestion, cross-references built
-- **Phase 3** (post-meeting automation): Circ form generation pipeline working, transcript extraction not yet built
+- **Phase 2** (meeting actions + modifications): Core staging built. Next: complex actions (further modified, withdrawal, combined consideration)
+- **Phase 3** (post-meeting automation): Circ form pipeline working. Transcript extraction not yet built.
 
-See [`PORTAL_ROADMAP.md`](PORTAL_ROADMAP.md) for the full plan.
+See [`docs/PORTAL_ROADMAP.md`](docs/PORTAL_ROADMAP.md) for the full development plan.
 
 ## License
 

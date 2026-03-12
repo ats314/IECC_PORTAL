@@ -3,7 +3,7 @@
 > **Owner:** Alex Smith, Director of Energy Programs, ICC
 > **Role:** Secretariat to the IECC (Commercial & Residential)
 > **Created:** 2026-02-14
-> **Last Updated:** 2026-03-10 (Session 34)
+> **Last Updated:** 2026-03-12 (Session 36)
 
 ## Project Goal
 
@@ -21,7 +21,7 @@ Build a master system to automate the most time-consuming parts of Alex's secret
 ## Future Capabilities (Partially Available)
 
 - **Email integration** — Alex wants to eventually share his email for automation
-- **SharePoint upload** — Built in Session 25 (`services/sharepoint.py`). Uses Graph API with client credentials. Dormant until Azure AD app is registered. Upload targets: `Shared Documents/.../Residential Subgroups/{subgroup}/{meeting}/`. Currently only circ forms; can be extended to agendas and modifications.
+- **SharePoint upload** — Graph API service built in Session 25 (`services/sharepoint.py`) but permanently blocked: Alex cannot register Azure AD apps (401 on portal, confirmed Session 36). **New approach (Session 36):** approved circ forms are auto-copied to `approved_circforms/{subgroup}/{meeting}/` with folder names matching SharePoint structure. Alex manually uploads via browser. Power Automate is available (confirmed Session 36) as a future automation path.
 
 ---
 
@@ -963,6 +963,66 @@ Proposals in PUBLIC_INPUT phase that received no consensus action are "Phase Clo
 - [x] CLAUDE.md — browser preview hard rule + 7th skill in routing table
 - [x] skills-update/iecc-browser-preview — NEW skill (needs copy to Windows)
 
+### Session 35 — 2026-03-11 (Doc Audit)
+**Agent:** Claude (Anthropic)
+**Actions:**
+- **Documentation audit** — Updated stale content in DEVELOPMENT.md, LLM_HANDOFF.md, and PORTAL_ROADMAP.md to reflect current state after Sessions 29-34.
+- **GitHub PR #5** — Pushed doc updates to remote.
+
+**Files modified:**
+- `web/DEVELOPMENT.md` — Updated feature status markers
+- `web/LLM_HANDOFF.md` — Updated web patterns
+- `docs/PORTAL_ROADMAP.md` — Updated phase status markers
+
+### Session 36 — 2026-03-12 (Bug Fixes, SharePoint Workaround, GitHub Sync)
+**Agent:** Claude (Anthropic)
+**Actions:**
+- **Fixed 5 bugs in web app:**
+  - `subgroup_portal.py` — Staging actions wrote raw `meeting["body"]` instead of `config.resolve_subgroup()` for both regular and Go Live staging. Would have written wrong subgroup names to `subgroup_actions`.
+  - `exports.py` — Modification export passed all actions instead of filtered modified-only actions.
+  - `auth.py` — Chair home crashed if staging tables didn't exist yet. Added `_ensure_tables()` call.
+  - `main.py` — Time formatting showed "2 PM EST" instead of "2:00 PM EST" for on-the-hour times (inverted logic).
+  - 4 templates — Replaced stale `var(--accent)` with `var(--icc-accent)` to match Session 34 CSS theme.
+- **Fixed Windows Unicode crash** — `iecc_startup.py` and `iecc_preflight.py` crashed on Windows cp1252 encoding when printing checkmarks/emojis. Added `sys.stdout.reconfigure(encoding='utf-8')`.
+- **SharePoint Azure AD confirmed blocked** — Walked through Azure portal App Registrations, got 401. Alex has no admin access to register apps. Updated memory files with hard rule: never suggest admin-gated approaches.
+- **Built approved circ forms auto-copy** — On approve, circ form docs are copied to `approved_circforms/{subgroup_folder}/{YY-MM-DD Meeting}/` with folder names matching SharePoint structure. Alex can drag contents directly into SharePoint browser.
+- **Confirmed Power Automate available** — Alex can create flows at make.powerautomate.com. Standard connectors (SharePoint, OneDrive) available. Future automation path for SharePoint upload.
+- **Confirmed drag-and-drop agenda reorder already built** — Full JS implementation exists in `meeting_portal.html` (lines 504-549) with API endpoint at `/meeting/{id}/agenda/reorder`.
+- **Git unified** — Committed all changes and pushed to `origin/main` at `ats314/IECC_PORTAL`.
+
+**DB changes:**
+- None (code-only session)
+
+**Files modified:**
+- `web/routes/subgroup_portal.py` — `resolve_subgroup()` fix in staging (2 locations)
+- `web/routes/exports.py` — Modification export filter fix
+- `web/routes/auth.py` — `_ensure_tables()` call in chair_home
+- `web/routes/circforms.py` — Added `_copy_to_approved_folder()` on approve
+- `web/main.py` — Time formatting fix for on-the-hour display
+- `web/config.py` — Added `APPROVED_CIRCFORMS_DIR` config
+- `web/templates/circ_forms.html` — `var(--accent)` → `var(--icc-accent)`
+- `web/templates/dashboard.html` — `var(--accent)` → `var(--icc-accent)`
+- `web/templates/meeting_detail.html` — `var(--accent)` → `var(--icc-accent)`, format_time filter
+- `web/templates/partials/circform_row.html` — `var(--accent)` → `var(--icc-accent)`
+- `tools/iecc_startup.py` — Windows UTF-8 encoding fix
+- `tools/iecc_preflight.py` — Windows UTF-8 encoding fix
+
+**State changes propagated:**
+- [x] PROJECT_MEMORY.md — this entry
+- [x] DEVELOPMENT.md — SharePoint priority updated, approved_circforms feature added
+- [x] LLM_HANDOFF.md — SharePoint status, approved_circforms, drag-and-drop status updated
+- [ ] AGENT_GUIDE.md — no schema changes
+- [x] CLAUDE.md — no changes needed (structure unchanged)
+- [ ] skills-update/ — no skill changes
+
+### Known Issues from Session 36
+**New:**
+- **SharePoint Graph API permanently blocked** — Alex cannot register Azure AD apps. The `services/sharepoint.py` service will remain dormant. SharePoint upload happens via manual browser upload from `approved_circforms/` folder.
+- **Power Automate available as future automation** — Alex has access to create flows. Could automate SharePoint upload without admin consent via standard connectors.
+
+**Resolved:**
+- **SharePoint upload built but dormant** (from Session 25 Known Issues) — Resolved by building local folder workaround. Graph API path abandoned.
+
 ### Known Issues from Session 34
 **New:**
 - **2 monograph proposals with unfixable fused words** — CEPC30-25 and CECP1-25 have source PDF text layers with zero-gap character placement. No extraction fix possible without NLP word-breaking. Low priority (both are in code language sections).
@@ -999,7 +1059,7 @@ Most issues from early sessions have been resolved through subsequent data minin
 - **Low email coverage (~33% residential)** — RE-phase proposals from circ forms lack email data. Not fixable from existing sources.
 - **13 modification variants** — e.g., "RE114-24 Kahre" tracked separately from "RE114-24". Could be linked but low priority.
 - **CEPC2-25 withdrawal** — Confirmed withdrawn (Session 20). Was previously on wrong proposal (CECP2-25). DQ flag WITHDRAWAL_REQUESTED on CECP2-25 may need cleanup.
-- **SharePoint upload built but dormant** — Upload service exists (`services/sharepoint.py`) but requires Azure AD app registration. Alex needs to set up App Registration with `Sites.ReadWrite.All` permission and configure env vars. See Session 25 entry.
+- **~~SharePoint upload built but dormant~~** — RESOLVED Session 36. Azure AD app registration permanently blocked (Alex has no admin access). Built local folder workaround: approved circ forms auto-copy to `approved_circforms/` with SharePoint-matching folder structure. Alex uploads manually via browser.
 
 All other Session 6–9 issues (governance tables, SG action gaps, vote/reason coverage, residential track build, etc.) were resolved in Sessions 8–12.
 

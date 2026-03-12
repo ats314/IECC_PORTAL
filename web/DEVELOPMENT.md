@@ -1,6 +1,6 @@
 # Development Guide — Current State & Next Steps
 
-> **Last updated:** 2026-03-11, Session 35 (doc audit)
+> **Last updated:** 2026-03-12, Session 36
 
 ## What's DONE and Working
 
@@ -51,6 +51,12 @@
   - Auto-files to correct subgroup meeting folder
   - Three-layer name mapping: meeting body → proposal subgroup → SharePoint folder
 - [x] Graceful degradation — works fully without SharePoint, LibreOffice, or any external dependencies
+
+### Approved Circ Forms Auto-Copy (Session 36)
+- [x] On approve, circ form docs are copied to `approved_circforms/{subgroup_folder}/{YY-MM-DD Meeting}/`
+- [x] Folder names match SharePoint structure (`config.SUBGROUP_TO_SP_FOLDER` mapping)
+- [x] Alex can drag folder contents directly into SharePoint browser upload
+- [x] Configured via `APPROVED_CIRCFORMS_DIR` in `config.py` (default: `IECC/approved_circforms/`)
 
 ### Authentication & Role Separation
 - [x] Login page with user selection (grouped by role)
@@ -103,8 +109,8 @@
 
 ## What's NOT Built Yet
 
-### Priority 1: SharePoint Azure AD Setup
-The SharePoint upload service is built but dormant. Alex needs to register an Azure AD app with `Sites.ReadWrite.All` permission and set `SP_TENANT_ID`, `SP_CLIENT_ID`, `SP_CLIENT_SECRET` environment variables. See `services/sharepoint.py` for details.
+### ~~Priority 1: SharePoint Azure AD Setup~~ — RESOLVED (Session 36)
+Azure AD app registration is permanently blocked — Alex has no admin access (confirmed 401 on portal). The Graph API upload service (`services/sharepoint.py`) will remain dormant. **Workaround built:** approved circ forms auto-copy to `approved_circforms/` with SharePoint-matching folder structure. Alex uploads manually via browser. Power Automate (available to Alex, confirmed Session 36) is a future automation path.
 
 ### Priority 2: Phase 2 Step 6 — Meeting Action Capture Redesign
 The current action staging handles simple cases (Approve/Disapprove/Approve as Modified) but not the complex reality of real meetings:

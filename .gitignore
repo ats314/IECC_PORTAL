@@ -34,6 +34,7 @@ env/
 
 # Generated files
 web/generated/
+approved_circforms/
 
 # OneDrive sync archives (large zip files)
 OneDrive_*.zip

@@ -6,11 +6,42 @@ from db import queries
 from routes.helpers import render
 import config
 import logging
+import shutil
+from datetime import datetime
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+
+def _copy_to_approved_folder(form: dict):
+    """Copy approved circ form to organized folder matching SharePoint structure.
+
+    Target: approved_circforms/{subgroup_folder}/{YY-MM-DD Meeting}/filename.ext
+    """
+    try:
+        src = _resolve_doc_path(form)
+        if not src.exists():
+            logger.warning(f"Cannot copy circ form {form['id']}: source not found at {src}")
+            return
+
+        # Build destination path matching SharePoint folder structure
+        sp_folder = config.subgroup_to_sp_folder(form["subgroup"])
+        try:
+            dt = datetime.strptime(form["meeting_date"], "%Y-%m-%d")
+            meeting_folder = f"{dt.strftime('%y-%m-%d')} Meeting"
+        except (ValueError, TypeError):
+            meeting_folder = f"{form['meeting_date']} Meeting"
+
+        dest_dir = config.APPROVED_CIRCFORMS_DIR / sp_folder / meeting_folder
+        dest_dir.mkdir(parents=True, exist_ok=True)
+        dest = dest_dir / src.name
+
+        shutil.copy2(src, dest)
+        logger.info(f"Circ form {form['id']} copied to {dest}")
+    except Exception as e:
+        logger.error(f"Failed to copy circ form {form['id']} to approved folder: {e}")
 
 # MIME types for supported document formats
 MIME_TYPES = {
@@ -118,6 +149,9 @@ async def approve_circ_form(request: Request, form_id: int):
         conn.execute(queries.APPROVE_CIRC_FORM, (user["name"], form_id))
 
     checkpoint()
+
+    # Copy approved doc to organized local folder for easy SharePoint upload
+    _copy_to_approved_folder(form)
 
     # Attempt SharePoint upload if configured
     sp_url = None

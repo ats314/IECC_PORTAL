@@ -105,13 +105,14 @@ User clicks login → sets cookie → middleware reads cookie on every request
 2. Actions are committed to `subgroup_actions` and a circ form document is auto-generated
 3. Circ form appears on the secretariat dashboard under "Pending Circ Forms"
 4. Secretariat can **Preview**, **Approve**, or **Reject** the circ form
-5. If SharePoint credentials are configured, "Approve" also uploads to the correct SharePoint folder
+5. "Approve" copies doc to `approved_circforms/{subgroup_folder}/{YY-MM-DD Meeting}/` for easy SharePoint upload
 
 ### Key Details
-- **Document format:** PDF if LibreOffice is installed, DOCX fallback if not. Alex's Windows machine likely uses DOCX fallback.
+- **Document format:** PDF if LibreOffice is installed, DOCX fallback if not. Alex's Windows machine uses DOCX fallback.
 - **DB table:** `circ_forms` — tracks lifecycle (pending_review → approved/uploaded → rejected)
-- **SharePoint upload:** Dormant by default. Requires Azure AD app registration with `Sites.ReadWrite.All`. Set env vars: `SP_TENANT_ID`, `SP_CLIENT_ID`, `SP_CLIENT_SECRET`.
-- **Folder mapping:** `config.SUBGROUP_TO_SP_FOLDER` maps DB subgroup names to SharePoint folder names. Target path: `Shared Documents/.../Residential Subgroups/{subgroup folder}/{YY-MM-DD Meeting}/`
+- **Approved docs auto-copy:** On approve, docs are copied to `IECC/approved_circforms/` organized by subgroup and meeting date, matching SharePoint folder structure. Alex drags into SharePoint browser.
+- **SharePoint Graph API:** Dormant permanently. Azure AD app registration blocked (Alex has no admin access). `services/sharepoint.py` exists but will not activate. **Do NOT suggest Azure AD or Graph API approaches.**
+- **Folder mapping:** `config.SUBGROUP_TO_SP_FOLDER` maps DB subgroup names to local/SharePoint folder names.
 - **Routes:** All under `/circ-forms/*` — registered in `main.py`, guarded by secretariat middleware
 
 ### Name Mapping Chain (3 layers)
@@ -140,16 +141,23 @@ Secretariat approves modifications before chairs see them. `POST /proposals/{can
 ### ICC Brand Theme — DONE (Session 33/34)
 CSS variables (`--icc-blue`, `--icc-green`, `--icc-dark`, etc.) applied across all templates. Fixed stale `--icc-light` references in 6 templates.
 
+### Approved Circ Forms Auto-Copy — DONE (Session 36)
+On approve, circ form docs are copied to `approved_circforms/{subgroup_folder}/{YY-MM-DD Meeting}/` matching SharePoint folder structure. Config: `APPROVED_CIRCFORMS_DIR` in `config.py`. Replaces the blocked Azure AD Graph API approach.
+
+### Bug Fixes — Session 36
+- `subgroup_portal.py` — Fixed staging to use `config.resolve_subgroup()` instead of raw meeting body name
+- `exports.py` — Fixed modification export to pass only modified actions (not all actions)
+- `auth.py` — Fixed chair home crash when staging tables don't exist
+- `main.py` — Fixed time formatting for on-the-hour display
+- 4 templates — Fixed stale `var(--accent)` → `var(--icc-accent)` CSS references
+
 ---
 
 ## What Alex Will Likely Ask You To Build Next
 
 Based on current state (see docs/PROJECT_MEMORY.md and docs/PORTAL_ROADMAP.md):
 
-### SharePoint Azure AD Setup
-Alex needs to register an Azure AD app with `Sites.ReadWrite.All` permission to enable SharePoint upload. The upload service is built and dormant. See `services/sharepoint.py`.
-
-### Meeting Action Capture Redesign (Phase 2 Step 6)
+### Meeting Action Capture Redesign (Phase 2 Step 6) — TOP PRIORITY
 Current staging handles simple cases but not: "Approve as Further Modified," withdrawals, combined consideration, or superseded actions. See `docs/PORTAL_ROADMAP.md` Phase 2 Step 6.
 
 ### Transcript Extraction Pipeline (Phase 3 Step 9)
@@ -158,8 +166,8 @@ Upload meeting DOCX transcripts → LLM extracts votes, reason statements, modif
 ### cdpACCESS Integration
 ICC's official code platform. Currently we export Word docs that staff use as reference for manual data entry. Direct API integration deferred until Alex talks to the CDP team.
 
-### Reorder Agenda via Drag & Drop
-The API endpoint exists (`/meeting/{id}/agenda/reorder`) but there's no drag-and-drop UI yet. Currently agenda items are ordered by the order they were added.
+### Power Automate SharePoint Upload (Future)
+Alex has access to Power Automate (confirmed Session 36). A flow could watch `approved_circforms/` and auto-upload to SharePoint. Standard connectors don't need admin consent. Not built yet — manual upload works for now.
 
 ---
 

@@ -123,6 +123,11 @@ except (PermissionError, OSError):
 GENERATED_DIR = _default_gen_dir
 CIRCFORMS_DIR = GENERATED_DIR / "circforms"
 
+# Approved circ forms — organized by subgroup/meeting for easy SharePoint upload
+# Structure: {APPROVED_CIRCFORMS_DIR}/{subgroup_folder}/{YY-MM-DD Meeting}/filename.docx
+_default_approved_dir = Path(__file__).parent.parent / "approved_circforms"
+APPROVED_CIRCFORMS_DIR = Path(os.environ.get("IECC_APPROVED_DIR", _default_approved_dir))
+
 
 def resolve_subgroup(body: str) -> str:
     """Convert a meeting body name to the proposal subgroup name used in the DB."""
