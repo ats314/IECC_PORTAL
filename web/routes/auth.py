@@ -8,6 +8,7 @@ from fastapi import APIRouter, Request, Form
 from fastapi.responses import RedirectResponse, HTMLResponse
 from db.connection import get_db
 from routes.helpers import render
+from routes.subgroup_portal import _ensure_tables
 
 router = APIRouter()
 
@@ -204,6 +205,7 @@ async def chair_home(request: Request):
 
     import config
     with get_db() as conn:
+        _ensure_tables(conn)
         # Get this chair's meetings
         my_meetings = [dict(r) for r in conn.execute(
             """SELECT * FROM meetings

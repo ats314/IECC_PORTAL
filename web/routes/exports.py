@@ -119,7 +119,7 @@ async def export_modifications(request: Request, meeting_id: int):
     if not modified:
         raise HTTPException(status_code=400, detail="No modifications found for this meeting.")
 
-    docx_bytes = generate_modification_docx(meeting, actions)
+    docx_bytes = generate_modification_docx(meeting, modified)
 
     safe_body = meeting["body"].replace(" ", "_").replace("/", "-")
     filename = f"{safe_body}_Modifications_{meeting['meeting_date']}.docx"

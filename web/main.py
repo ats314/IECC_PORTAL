@@ -43,7 +43,7 @@ def format_time(time_str):
         suffix = "a.m." if hour < 12 else "p.m."
         display_hour = hour if 1 <= hour <= 12 else (hour - 12 if hour > 12 else 12)
         if minute == 0:
-            return f"{display_hour}:{minute:02d} {suffix} EST"
+            return f"{display_hour} {suffix} EST"
         return f"{display_hour}:{minute:02d} {suffix} EST"
     except (ValueError, IndexError):
         return time_str

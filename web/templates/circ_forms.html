@@ -6,7 +6,7 @@
 <h1 style="margin-bottom: 1.5rem; color: var(--text-bright);">Circulation Forms</h1>
 
 <!-- Pending Review -->
-<div class="card" style="border-left: 3px solid var(--accent);">
+<div class="card" style="border-left: 3px solid var(--icc-accent);">
     <div class="card-header">Pending Review ({{ pending_forms|length }})</div>
     {% if pending_forms %}
     <table class="data-table">
@@ -83,7 +83,7 @@
                 {% if cf.status == 'approved' %}
                     <span class="badge" style="background: var(--success); color: #fff;">Approved</span>
                 {% elif cf.status == 'uploaded' %}
-                    <span class="badge" style="background: var(--accent); color: #fff;">Uploaded</span>
+                    <span class="badge" style="background: var(--icc-accent); color: #fff;">Uploaded</span>
                 {% elif cf.status == 'rejected' %}
                     <span class="badge" style="background: var(--danger); color: #fff;">Rejected</span>
                 {% else %}
@@ -96,7 +96,7 @@
                 <a href="/circ-forms/{{ cf.id }}/preview" target="_blank" class="btn btn-sm">Preview</a>
                 <a href="/circ-forms/{{ cf.id }}/download" class="btn btn-sm">Download</a>
                 {% if cf.sharepoint_url %}
-                    <a href="{{ cf.sharepoint_url }}" target="_blank" class="btn btn-sm" style="color: var(--accent);">SharePoint</a>
+                    <a href="{{ cf.sharepoint_url }}" target="_blank" class="btn btn-sm" style="color: var(--icc-accent);">SharePoint</a>
                 {% endif %}
                 {% if cf.rejection_reason %}
                     <span class="text-muted text-sm" title="{{ cf.rejection_reason }}">Reason: {{ cf.rejection_reason[:30] }}{% if cf.rejection_reason|length > 30 %}...{% endif %}</span>

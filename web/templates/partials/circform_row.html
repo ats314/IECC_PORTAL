@@ -9,7 +9,7 @@
             <span class="badge" style="background: var(--success); color: #fff;">Approved</span>
             <span class="text-muted text-sm">by {{ form.reviewed_by }}</span>
         {% elif form.status == 'uploaded' %}
-            <span class="badge" style="background: var(--accent); color: #fff;">Uploaded to SharePoint</span>
+            <span class="badge" style="background: var(--icc-accent); color: #fff;">Uploaded to SharePoint</span>
             {% if form.sharepoint_url %}
                 <a href="{{ form.sharepoint_url }}" target="_blank" class="btn btn-sm">View</a>
             {% endif %}

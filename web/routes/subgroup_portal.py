@@ -294,6 +294,7 @@ async def stage_action(
                 "request": request, "errors": errors, "canonical_id": canonical_id,
             })
 
+        resolved_subgroup = config.resolve_subgroup(meeting["body"])
         conn.execute("""
             INSERT INTO sg_action_staging
                 (meeting_id, proposal_uid, canonical_id, subgroup, action_date,
@@ -311,7 +312,7 @@ async def stage_action(
                 seconded_by = excluded.seconded_by
         """, (
             meeting_id, proposal_uid, canonical_id,
-            meeting["body"], meeting["meeting_date"],
+            resolved_subgroup, meeting["meeting_date"],
             recommendation,
             vote_for, vote_against, vote_not_voting,
             reason.strip() or None,
@@ -544,6 +545,7 @@ async def go_live_stage(
             raise HTTPException(status_code=404, detail=f"Proposal {canonical_id} not found")
         proposal_uid = prop["proposal_uid"]
 
+        resolved_subgroup = config.resolve_subgroup(meeting["body"])
         conn.execute("""
             INSERT INTO sg_action_staging
                 (meeting_id, proposal_uid, canonical_id, subgroup, action_date,
@@ -561,7 +563,7 @@ async def go_live_stage(
                 seconded_by = excluded.seconded_by
         """, (
             meeting_id, proposal_uid, canonical_id,
-            meeting["body"], meeting["meeting_date"],
+            resolved_subgroup, meeting["meeting_date"],
             recommendation,
             vote_for, vote_against, vote_not_voting,
             reason.strip() or None,

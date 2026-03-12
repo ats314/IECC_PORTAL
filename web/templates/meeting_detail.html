@@ -10,9 +10,9 @@
 <div class="card" style="border-left: 4px solid var(--icc-green);">
     <h1 style="color: var(--text-bright); font-size: 1.3rem;">{{ meeting.body }}</h1>
     <p style="color: var(--text-muted);">
-        {{ meeting.meeting_date }}{% if meeting.meeting_time %} at {{ meeting.meeting_time }}{% endif %}
+        {{ meeting.meeting_date }}{% if meeting.meeting_time %} at {{ meeting.meeting_time|format_time }}{% endif %}
         &bull; <span class="badge badge-{{ meeting.track }}">{{ meeting.track|title }}</span>
-        &bull; {{ meeting.phase }}
+        &bull; {{ meeting.phase|replace('_',' ')|title if meeting.phase else '' }}
         &bull;
         {% if meeting.status == 'COMPLETED' %}<span class="badge badge-decided">Completed</span>
         {% else %}<span class="badge badge-pending">Scheduled</span>{% endif %}
