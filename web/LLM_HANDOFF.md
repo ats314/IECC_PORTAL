@@ -123,44 +123,61 @@ Example: "Residential Modeling Subgroup" → "Modeling (SG2)" → "Modeling Subg
 
 ---
 
+## What's Been Built Since Session 29
+
+### "Go Live" Meeting Mode — DONE (Session 34)
+Full-viewport presentation view at `/meeting/{id}/go-live` designed for Teams screen sharing. Features: large proposal text, quick-action buttons, big vote counters, auto-advance after staging, timer/clock, keyboard shortcuts (1-5, U, arrow keys), modification panels, cross-reference chips, readiness badges. Route: `GET /meeting/{id}/go-live`, `POST /meeting/{id}/go-live/stage`.
+
+### Testing Mode — DONE (Session 34)
+Secretariat can toggle `proposals.testing` flag via `POST /proposals/{canonical_id}/toggle-testing`. Proposals marked Testing appear in chair portal agendas for demo purposes without affecting real data. UI buttons on proposal detail page.
+
+### Modification Approval Workflow — DONE (Session 34)
+Secretariat approves modifications before chairs see them. `POST /proposals/{canonical_id}/toggle-mod-approval/{mod_id}` toggles `modifications.secretariat_approved`. Unapproved mods shown with 0.6 opacity in chair portal.
+
+### All Chair Accounts — DONE (Session 34)
+16 users total in `routes/auth.py`: 2 secretariat, 8 residential chairs (all subgroups + consensus), 6 commercial chairs (all subgroups + Duane Jonlin consensus chair).
+
+### ICC Brand Theme — DONE (Session 33/34)
+CSS variables (`--icc-blue`, `--icc-green`, `--icc-dark`, etc.) applied across all templates. Fixed stale `--icc-light` references in 6 templates.
+
+---
+
 ## What Alex Will Likely Ask You To Build Next
 
-Based on conversations from Sessions 21+ (see docs/PROJECT_MEMORY.md and docs/PORTAL_ROADMAP.md for completion status):
+Based on current state (see docs/PROJECT_MEMORY.md and docs/PORTAL_ROADMAP.md):
 
 ### SharePoint Azure AD Setup
-Alex needs help setting up the Azure AD app registration to enable SharePoint upload. See the guide at the bottom of `services/sharepoint.py` or in the plan file. The portal works fully without it — the Approve button just skips the upload step.
+Alex needs to register an Azure AD app with `Sites.ReadWrite.All` permission to enable SharePoint upload. The upload service is built and dormant. See `services/sharepoint.py`.
 
-### "Go Live" Meeting Mode
-A presentation-friendly view of the portal for Teams screen sharing. Big text, minimal UI, auto-advance through proposals. This is the most likely next request.
+### Meeting Action Capture Redesign (Phase 2 Step 6)
+Current staging handles simple cases but not: "Approve as Further Modified," withdrawals, combined consideration, or superseded actions. See `docs/PORTAL_ROADMAP.md` Phase 2 Step 6.
 
-### More Chair Users
-Only 2 chair accounts exist (Brian Shanks, Robert Howard — both Residential Modeling SG2). Alex will want chairs for all subgroups. Just add entries to the USERS dict in `routes/auth.py`.
+### Transcript Extraction Pipeline (Phase 3 Step 9)
+Upload meeting DOCX transcripts → LLM extracts votes, reason statements, modifications → present for review → import. The `meeting_events` table schema exists but is empty.
 
-### Rich Text Modifications + Centralized Content — MOSTLY DONE (Session 26 + 29)
-Quill.js rich text editor is integrated. Chairs can use underline/strikethrough to mark additions/deletions. HTML stored in `modification_text` column. **Session 29:** Proposal text now pre-loads from the `proposal_text` table into the portal. Chairs see the actual code language with ICC markup, and can load it into Quill with one click. Cross-reference chips show related proposals. Pre-submitted modifications can be loaded directly into the editor. See `DEVELOPMENT.md` Priority 3 for details.
+### cdpACCESS Integration
+ICC's official code platform. Currently we export Word docs that staff use as reference for manual data entry. Direct API integration deferred until Alex talks to the CDP team.
 
-### Centralized Content Loading Pattern (Session 29 — NEW)
-The meeting portal now batch-loads content from three new tables for all agenda items:
+### Reorder Agenda via Drag & Drop
+The API endpoint exists (`/meeting/{id}/agenda/reorder`) but there's no drag-and-drop UI yet. Currently agenda items are ordered by the order they were added.
+
+---
+
+## Key Architectural Pattern: Content Loading in Meeting Portal
+
+The meeting portal batch-loads content from three tables for all agenda items:
 ```python
 # In subgroup_portal.py meeting_portal():
 uids = [item["proposal_uid"] for item in agenda]
 placeholders = ",".join("?" * len(uids))
 # Load proposal text
 sql = queries.PROPOSAL_TEXT_FOR_MEETING.format(placeholders=placeholders)
-rows = conn.execute(sql, uids).fetchall()
 # Load modifications
 sql = queries.MODIFICATIONS_FOR_PROPOSALS.format(placeholders=placeholders)
 # Load cross-references (needs uids twice for both FK columns)
 sql = queries.PROPOSAL_LINKS_FOR_PROPOSALS.format(placeholders=placeholders)
-rows = conn.execute(sql, uids + uids).fetchall()
 ```
-Each agenda item gets annotated with `item["content"]`, `item["modifications"]`, and `item["links"]` dicts. The template renders these as collapsible panels, badges, and interactive buttons. New CSS classes: `.badge-content`, `.badge-mod-available`, `.proposal-text-panel`, `.cross-refs`, `.cross-ref-chip`.
-
-### cdpACCESS Integration
-ICC's official code platform. Currently we export Word docs that staff use as reference for manual data entry. Direct API integration is a future goal but requires coordination with the CDP team.
-
-### Reorder Agenda via Drag & Drop
-The API endpoint exists (`/meeting/{id}/agenda/reorder`) but there's no drag-and-drop UI yet. Currently agenda items are ordered by the order they were added.
+Each agenda item gets annotated with `item["content"]`, `item["modifications"]`, and `item["links"]` dicts. The template renders these as collapsible panels, badges, and interactive buttons. CSS classes: `.badge-content`, `.badge-mod-available`, `.proposal-text-panel`, `.cross-refs`, `.cross-ref-chip`.
 
 ---
 
@@ -184,6 +201,9 @@ After making changes, verify:
 14. **Exports** — click any export button → downloads a .docx file
 15. **Circ form pipeline** — complete a meeting as chair → sign in as secretariat → circ form appears on dashboard → Preview/Approve/Reject work
 16. **Circ forms page** — `/circ-forms` shows all forms with pending/reviewed sections
+17. **Go Live mode** — click "Go Live" on meeting portal → full-viewport presentation view, keyboard shortcuts (1-5, U, arrows), auto-advance after staging
+18. **Testing mode** — as secretariat on proposal detail, toggle "Mark as Testing" → proposal appears in chair portal agendas for demo
+19. **Modification approval** — as secretariat on proposal detail, toggle "Approve" on a modification → unapproved mods show with 0.6 opacity in chair portal
 
 ---
 

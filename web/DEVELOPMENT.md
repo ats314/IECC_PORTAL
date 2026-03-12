@@ -1,6 +1,6 @@
 # Development Guide — Current State & Next Steps
 
-> **Last updated:** 2026-03-05, Session 29
+> **Last updated:** 2026-03-11, Session 35 (doc audit)
 
 ## What's DONE and Working
 
@@ -62,10 +62,42 @@
 - [x] User name + Sign Out in navbar for both portals
 - [x] SVG favicon for both portals
 
-### UI Polish (Session 23/24)
+### "Go Live" Meeting Mode (Session 34)
+- [x] Full-viewport presentation view at `/meeting/{id}/go-live` — designed for Teams screen sharing
+- [x] Current proposal prominently displayed (large text for code section, proponent)
+- [x] Quick-action buttons for common recommendations
+- [x] Large vote counter inputs
+- [x] Auto-advance to next proposal after recording action (POST `/meeting/{id}/go-live/stage`)
+- [x] Timer/clock visible in top bar
+- [x] Minimal chrome — maximizes content visibility
+- [x] Progress bar showing agenda completion count
+- [x] Keyboard shortcuts for recommendations (1-5, U for unanimous, arrow keys for nav)
+- [x] Modification panel loading with source tracking
+- [x] Cross-reference chips showing related proposals
+- [x] Meeting prep coverage stats and readiness badges
+
+### Testing Mode (Session 34)
+- [x] Toggle testing flag on proposals — secretariat-only route at `POST /proposals/{canonical_id}/toggle-testing`
+- [x] `proposals.testing` column (binary flag) — proposals marked Testing appear in chair portals for demo without affecting real data
+- [x] UI buttons on proposal detail page: "Mark as Testing" / "Remove Testing"
+
+### Modification Approval Workflow (Session 34)
+- [x] Secretariat approval of modifications before chairs see them — `POST /proposals/{canonical_id}/toggle-mod-approval/{mod_id}`
+- [x] `modifications.secretariat_approved` column (binary flag)
+- [x] Approve/Unapprove toggle buttons on proposal detail page (secretariat-only)
+- [x] Unapproved modifications shown with 0.6 opacity in chair portal
+
+### Chair Accounts — All Subgroups (Session 34)
+- [x] 16 user accounts in `routes/auth.py` USERS dict:
+  - 2 secretariat: Alex Smith, Jason Toves
+  - 8 residential chairs: Brian Shanks + Rob Howard (SG2 Modeling), Rick Madrid (SG6 HVAC), plus SG1 Admin, SG3 EPLR, SG4 Envelope, SG5 Existing Buildings, Residential Consensus
+  - 6 commercial chairs: Admin, Envelope & Embodied Energy, EPLR, HVACR & Water Heating, Modeling, Duane Jonlin (Consensus Committee)
+
+### UI Polish (Session 23/24 + 34)
 - [x] Shared CSS utility classes in main.css (btn-group, btn-mods, btn-xs, btn-sm, text-sm, text-muted, breadcrumb, notes-tooltip) — removed duplication from individual template `<style>` blocks
 - [x] Breadcrumb navigation on review page
 - [x] Phase name formatting throughout (`CODE_PROPOSAL` → `Code Proposal`)
+- [x] ICC brand theme with CSS variables (`--icc-blue`, `--icc-green`, `--icc-dark`, etc.) — Session 33/34
 
 ---
 
@@ -74,44 +106,24 @@
 ### Priority 1: SharePoint Azure AD Setup
 The SharePoint upload service is built but dormant. Alex needs to register an Azure AD app with `Sites.ReadWrite.All` permission and set `SP_TENANT_ID`, `SP_CLIENT_ID`, `SP_CLIENT_SECRET` environment variables. See `services/sharepoint.py` for details.
 
-### Priority 2: "Go Live" Meeting Mode
-Alex wants a presentation-friendly view for when the chair shares their screen on Teams during the meeting. Think of it as a simplified, focused view of the portal designed for visibility on a screen share.
+### Priority 2: Phase 2 Step 6 — Meeting Action Capture Redesign
+The current action staging handles simple cases (Approve/Disapprove/Approve as Modified) but not the complex reality of real meetings:
+- **"Approve as Further Modified"** — original modification rejected, new one crafted live during meeting
+- **Withdrawal** — proposal withdrawn by proponent (no vote needed)
+- **Combined consideration** — two or more proposals heard together, linked in the record
+- **Superseded** — proposal disapproved because another proposal's modification covered it (e.g., REPC49 → REPC34)
+See `docs/PORTAL_ROADMAP.md` Phase 2 Step 6 for full spec.
 
-**Requirements discussed:**
-- Current proposal prominently displayed (large text for code section, proponent)
-- Quick-action buttons for common recommendations
-- Big vote counter inputs
-- Auto-advance to next proposal after recording action
-- Timer/clock visible
-- Minimal chrome — maximize content visibility
-
-### Priority 3: Rich Text Modification Editor + Proposal Content — MOSTLY COMPLETE (Session 26 + 29)
-The Quill.js rich text editor is integrated into the portal. Chairs can use underline (additions) and strikethrough (deletions) when entering modification text, matching ICC markup conventions. HTML is stored in modification_text and renders properly in review pages, proposal detail, and Word document exports.
-
-**Session 29 additions:** Centralized content database built. Proposals now have extracted code language with ICC legislative markup (`<ins>`/`<del>` tags) in the `proposal_text` table. The meeting portal shows proposal language panels, pre-submitted modification panels, cross-reference chips, and "Load into Editor" buttons that pre-populate the Quill editor with the actual proposal text. Query `SELECT COUNT(*) FROM proposal_text` for current coverage.
-
-**What's done:**
-- [x] Quill.js editor with toolbar (bold, underline, strikethrough, lists, clean), dark theme, HTMX integration
-- [x] HTML rendering in all display contexts, Word doc generators parse HTML into proper formatting
-- [x] Code language extraction — `populate_content.py` extracts from cdpACCESS DOCX files into `proposal_text` table (query DB for current coverage)
-- [x] Pre-loaded code language — "Load Original Proposal Text" button loads extracted text into Quill editor
-- [x] Pre-submitted modifications — "Load into Editor" button loads modification text and auto-sets recommendation to "Approved as Modified"
-- [x] Cross-reference chips — proposals modifying the same code section linked via `proposal_links` (auto-detected relationships)
-
-**What's NOT done yet:**
-1. **Coverage gap** — Not all proposals have extracted text. PUBLIC_INPUT phase proposals mostly lack DOCX files. Could backfill from monograph PDF.
-2. **"Go Live" mode** — the editor needs to be optimized for Teams screen sharing with bigger fonts and clearer markup visibility
+### Priority 3: Transcript Extraction Pipeline (Phase 3 Step 9)
+Upload meeting DOCX transcripts, LLM extracts structured data (votes, reason statements, modifications, who moved/seconded). Present to Alex for review before importing. The `meeting_events` table schema exists but is empty.
 
 ### Priority 4: cdpACCESS Integration
 cdpACCESS is ICC's official code development platform. Currently the modification document export is a Word doc that staff manually reference when entering data into cdpACCESS. Direct API integration was discussed but deferred until Alex talks to the CDP team.
 
 **Short-term bridge (built):** Word document export that staff use as reference while entering into cdpACCESS manually.
 
-### Priority 5: More Chair Accounts
-Currently only Residential Modeling SG2 chairs (Brian Shanks, Robert Howard) exist. Need to add chairs for all subgroups across both tracks. The USERS dict in `routes/auth.py` is the place to add them.
-
-### Priority 6: Consensus Committee Chair Portal
-A third role type for consensus committee chairs who manage the final hearing. Not yet designed.
+### Priority 5: Proposal Text Coverage Gap
+Not all proposals have extracted text. PUBLIC_INPUT phase proposals mostly lack DOCX files. Monograph PDF extraction covers 39 proposals. 2 proposals (CEPC30-25, CECP1-25) have unfixable source PDF encoding issues. Query `SELECT COUNT(*) FROM proposal_text` for current coverage.
 
 ### Future: Real Authentication
 Replace fake login with Microsoft SSO (all ICC staff are on Microsoft). The middleware pattern is already in place — just need to swap the cookie-based auth for real OAuth tokens.
