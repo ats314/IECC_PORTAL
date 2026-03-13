@@ -143,7 +143,7 @@ Secretariat approves modifications before chairs see them. `POST /proposals/{can
 CSS variables (`--icc-blue`, `--icc-green`, `--icc-dark`, etc.) applied across all templates. Fixed stale `--icc-light` references in 6 templates.
 
 ### Approved Circ Forms + SharePoint Pipeline — DONE (Session 36)
-On approve, circ form docs auto-copy to OneDrive for Business sync folder. Power Automate flow (live) moves files to SharePoint and sends mobile notification. Full pipeline: Portal approve → OneDrive sync → Power Automate → SharePoint. Config: `APPROVED_CIRCFORMS_DIR` in `config.py`.
+On approve, circ form docs auto-copy to OneDrive for Business sync folder. Power Automate flow (live) moves files to SharePoint and sends mobile notification. Full pipeline: Portal approve → OneDrive sync → Power Automate → SharePoint. Config: `APPROVED_CIRCFORMS_DIR` in `config.py`. **NOTE:** End-to-end pipeline test (portal approve → OneDrive → SharePoint) has NOT been completed yet — needs to be validated in a future session.
 
 ### Bug Fixes — Session 36
 - `subgroup_portal.py` — Fixed staging to use `config.resolve_subgroup()` instead of raw meeting body name

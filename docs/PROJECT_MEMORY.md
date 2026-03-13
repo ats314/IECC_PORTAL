@@ -1007,15 +1007,20 @@ Proposals in PUBLIC_INPUT phase that received no consensus action are "Phase Clo
 - `tools/iecc_startup.py` — Windows UTF-8 encoding fix
 - `tools/iecc_preflight.py` — Windows UTF-8 encoding fix
 
+**Session 36 continuation — Power Automate pipeline + OneDrive integration:**
+- **Power Automate flow configured via Claude in Chrome** — Flow "Move file from OneDrive for Business to SharePoint and notify me" set up in browser. Trigger: `/IECC_Approved_CircForms` (include subfolders = Yes). Destination: SharePoint `Portal_TEST` folder at `/Shared Documents/Committees/Cmtes-Public/Codes/Energy/Residential (RECDC)/Resources/2027 IECC/Portal_TEST`. All connectors authenticated as `alsmith@iccsafe.org`.
+- **OneDrive sync folder integration** — `config.py` updated to default `APPROVED_CIRCFORMS_DIR` to `~/OneDrive - International Code Council/IECC_Approved_CircForms/` with fallback to local `approved_circforms/`. Portal approve → OneDrive sync → Power Automate → SharePoint pipeline is fully wired.
+- **End-to-end portal test NOT completed** — Marked RECP10-25 and RECP11-25 as testing, logged in as Brian Shanks on meeting 94 portal, staged one action (RECP15-25 Approved as Submitted), but test was aborted before Send to Secretariat. All test data cleaned up (testing flags removed, staged action deleted). **The full pipeline test (portal approve → OneDrive → Power Automate → SharePoint) still needs to be done in a future session.**
+- **Test database confirmed destroyed** — `iecc_test.db` deleted. CLAUDE.md updated with explicit "no test DB" section. All testing must use production data with the `testing` flag.
+
 **State changes propagated:**
 - [x] PROJECT_MEMORY.md — this entry
-- [x] DEVELOPMENT.md — SharePoint priority updated, approved_circforms feature added
-- [x] LLM_HANDOFF.md — SharePoint status, approved_circforms, drag-and-drop status updated
+- [x] DEVELOPMENT.md — SharePoint priority updated, approved_circforms feature added, Power Automate pipeline documented
+- [x] LLM_HANDOFF.md — SharePoint status, approved_circforms, drag-and-drop status updated, Power Automate marked DONE
 - [ ] AGENT_GUIDE.md — no schema changes
-- [x] CLAUDE.md — removed stale test DB section, updated project structure
-- [x] web/DEVELOPMENT.md — updated approved circforms section with OneDrive + Power Automate pipeline
-- [x] web/LLM_HANDOFF.md — updated circ form pipeline, Power Automate section marked DONE
-- [ ] skills-update/ — no skill changes
+- [x] CLAUDE.md — removed stale test DB section, updated project structure, added testing rules
+- [x] README.md — added SharePoint + Power Automate feature description
+- [ ] skills-update/ — new meeting-workflow skill recommended but not created
 
 ### Known Issues from Session 36
 **New:**
