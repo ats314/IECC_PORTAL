@@ -105,12 +105,13 @@ User clicks login → sets cookie → middleware reads cookie on every request
 2. Actions are committed to `subgroup_actions` and a circ form document is auto-generated
 3. Circ form appears on the secretariat dashboard under "Pending Circ Forms"
 4. Secretariat can **Preview**, **Approve**, or **Reject** the circ form
-5. "Approve" copies doc to `approved_circforms/{subgroup_folder}/{YY-MM-DD Meeting}/` for easy SharePoint upload
+5. "Approve" copies doc to OneDrive sync folder → Power Automate auto-uploads to SharePoint → mobile notification sent
 
 ### Key Details
 - **Document format:** PDF if LibreOffice is installed, DOCX fallback if not. Alex's Windows machine uses DOCX fallback.
 - **DB table:** `circ_forms` — tracks lifecycle (pending_review → approved/uploaded → rejected)
-- **Approved docs auto-copy:** On approve, docs are copied to `IECC/approved_circforms/` organized by subgroup and meeting date, matching SharePoint folder structure. Alex drags into SharePoint browser.
+- **Approved docs auto-copy:** On approve, docs are copied to OneDrive for Business sync folder (`~/OneDrive - International Code Council/IECC_Approved_CircForms/`), organized by subgroup and meeting date. Falls back to local `approved_circforms/` if OneDrive folder doesn't exist.
+- **Power Automate flow (live):** Watches `IECC_Approved_CircForms` in OneDrive (including subfolders) → copies to SharePoint `Portal_TEST` folder → deletes from OneDrive → sends mobile notification. Fully automated, no manual upload needed.
 - **SharePoint Graph API:** Dormant permanently. Azure AD app registration blocked (Alex has no admin access). `services/sharepoint.py` exists but will not activate. **Do NOT suggest Azure AD or Graph API approaches.**
 - **Folder mapping:** `config.SUBGROUP_TO_SP_FOLDER` maps DB subgroup names to local/SharePoint folder names.
 - **Routes:** All under `/circ-forms/*` — registered in `main.py`, guarded by secretariat middleware
@@ -141,8 +142,8 @@ Secretariat approves modifications before chairs see them. `POST /proposals/{can
 ### ICC Brand Theme — DONE (Session 33/34)
 CSS variables (`--icc-blue`, `--icc-green`, `--icc-dark`, etc.) applied across all templates. Fixed stale `--icc-light` references in 6 templates.
 
-### Approved Circ Forms Auto-Copy — DONE (Session 36)
-On approve, circ form docs are copied to `approved_circforms/{subgroup_folder}/{YY-MM-DD Meeting}/` matching SharePoint folder structure. Config: `APPROVED_CIRCFORMS_DIR` in `config.py`. Replaces the blocked Azure AD Graph API approach.
+### Approved Circ Forms + SharePoint Pipeline — DONE (Session 36)
+On approve, circ form docs auto-copy to OneDrive for Business sync folder. Power Automate flow (live) moves files to SharePoint and sends mobile notification. Full pipeline: Portal approve → OneDrive sync → Power Automate → SharePoint. Config: `APPROVED_CIRCFORMS_DIR` in `config.py`.
 
 ### Bug Fixes — Session 36
 - `subgroup_portal.py` — Fixed staging to use `config.resolve_subgroup()` instead of raw meeting body name
@@ -166,8 +167,8 @@ Upload meeting DOCX transcripts → LLM extracts votes, reason statements, modif
 ### cdpACCESS Integration
 ICC's official code platform. Currently we export Word docs that staff use as reference for manual data entry. Direct API integration deferred until Alex talks to the CDP team.
 
-### Power Automate SharePoint Upload (Future)
-Alex has access to Power Automate (confirmed Session 36). A flow could watch `approved_circforms/` and auto-upload to SharePoint. Standard connectors don't need admin consent. Not built yet — manual upload works for now.
+### ~~Power Automate SharePoint Upload~~ — DONE (Session 36)
+Power Automate flow is live. Watches `IECC_Approved_CircForms` in OneDrive for Business (including subfolders) → creates file in SharePoint `Shared Documents/Committees/Cmtes-Public/Codes/Energy/Residential (RECDC)/Resources/2027 IECC/Portal_TEST` → deletes original from OneDrive → sends mobile notification. Connected as alsmith@iccsafe.org.
 
 ---
 

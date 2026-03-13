@@ -125,7 +125,12 @@ CIRCFORMS_DIR = GENERATED_DIR / "circforms"
 
 # Approved circ forms — organized by subgroup/meeting for easy SharePoint upload
 # Structure: {APPROVED_CIRCFORMS_DIR}/{subgroup_folder}/{YY-MM-DD Meeting}/filename.docx
-_default_approved_dir = Path(__file__).parent.parent / "approved_circforms"
+# Default: OneDrive for Business sync folder → Power Automate picks up and uploads to SharePoint
+_default_approved_dir = Path(os.path.expanduser(
+    "~/OneDrive - International Code Council/IECC_Approved_CircForms"
+))
+if not _default_approved_dir.exists():
+    _default_approved_dir = Path(__file__).parent.parent / "approved_circforms"
 APPROVED_CIRCFORMS_DIR = Path(os.environ.get("IECC_APPROVED_DIR", _default_approved_dir))
 
 

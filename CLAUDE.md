@@ -33,15 +33,13 @@ Read these files IN THIS ORDER. Do not skip any.
 
 After reading all docs, tell Alex: **"I've completed startup and read all project docs. Ready to work."**
 
-## Testing — USE THE TEST DATABASE
+## Testing
 
-A test copy of the production database exists at `iecc_test.db`. **Use this for ALL testing.**
+There is currently **NO separate test database**. The previous `iecc_test.db` was destroyed (Session 36) and has not been recreated.
 
-- To run the web app against the test DB: `IECC_DB_PATH=iecc_test.db` (set the env var before starting uvicorn)
-- Create meetings, stage actions, send to secretariat, export docs — do whatever you want in the test DB
-- **NEVER create fake meetings, test proposals, or dummy data in `iecc.db`.** That is production data with 510 real proposals and real meeting history. If you need to test, use `iecc_test.db`.
-- To refresh the test DB from production: `cp iecc.db iecc_test.db`
-- The test DB was created on 2026-03-09 from a known-good production state
+- **NEVER create fake meetings, test proposals, or dummy data in `iecc.db`.** That is production data with 510 real proposals and real meeting history.
+- Test portal features using real data in production — just don't create fake records
+- If a dedicated test DB is needed in the future, Alex will create one. Do not silently create or overwrite `iecc_test.db`.
 
 ## Hard Rules
 
@@ -65,7 +63,7 @@ A test copy of the production database exists at `iecc_test.db`. **Use this for 
 ```
 IECC/
 ├── iecc.db                    # THE database (SQLite, WAL mode, tracked via Git LFS)
-├── iecc_test.db               # Test copy — use IECC_DB_PATH=iecc_test.db for all testing
+├── approved_circforms/         # Fallback dir (OneDrive preferred — see config.py)
 ├── CLAUDE.md                  # THIS FILE — hard rules and structure
 ├── README.md                  # Public-facing project description
 │

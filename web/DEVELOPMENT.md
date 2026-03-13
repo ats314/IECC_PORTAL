@@ -52,11 +52,13 @@
   - Three-layer name mapping: meeting body → proposal subgroup → SharePoint folder
 - [x] Graceful degradation — works fully without SharePoint, LibreOffice, or any external dependencies
 
-### Approved Circ Forms Auto-Copy (Session 36)
+### Approved Circ Forms Auto-Copy + SharePoint Pipeline (Session 36)
 - [x] On approve, circ form docs are copied to `approved_circforms/{subgroup_folder}/{YY-MM-DD Meeting}/`
 - [x] Folder names match SharePoint structure (`config.SUBGROUP_TO_SP_FOLDER` mapping)
-- [x] Alex can drag folder contents directly into SharePoint browser upload
-- [x] Configured via `APPROVED_CIRCFORMS_DIR` in `config.py` (default: `IECC/approved_circforms/`)
+- [x] Default output: OneDrive for Business sync folder (`~/OneDrive - International Code Council/IECC_Approved_CircForms/`)
+- [x] Power Automate flow configured: OneDrive trigger → Create file in SharePoint Portal_TEST → Delete from OneDrive → Mobile notification
+- [x] Fallback: if OneDrive folder doesn't exist, uses local `approved_circforms/` for manual browser upload
+- [x] Configured via `APPROVED_CIRCFORMS_DIR` in `config.py` (env var `IECC_APPROVED_DIR` overrides)
 
 ### Authentication & Role Separation
 - [x] Login page with user selection (grouped by role)
@@ -109,8 +111,8 @@
 
 ## What's NOT Built Yet
 
-### ~~Priority 1: SharePoint Azure AD Setup~~ — RESOLVED (Session 36)
-Azure AD app registration is permanently blocked — Alex has no admin access (confirmed 401 on portal). The Graph API upload service (`services/sharepoint.py`) will remain dormant. **Workaround built:** approved circ forms auto-copy to `approved_circforms/` with SharePoint-matching folder structure. Alex uploads manually via browser. Power Automate (available to Alex, confirmed Session 36) is a future automation path.
+### ~~Priority 1: SharePoint Integration~~ — RESOLVED (Session 36)
+Azure AD app registration is permanently blocked — Alex has no admin access. The Graph API upload service (`services/sharepoint.py`) remains dormant. **Full pipeline built:** Portal approve → auto-copy to OneDrive sync folder → Power Automate flow moves to SharePoint `Portal_TEST` folder → mobile notification. No manual upload needed.
 
 ### Priority 2: Phase 2 Step 6 — Meeting Action Capture Redesign
 The current action staging handles simple cases (Approve/Disapprove/Approve as Modified) but not the complex reality of real meetings:

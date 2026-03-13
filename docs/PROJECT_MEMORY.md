@@ -999,7 +999,7 @@ Proposals in PUBLIC_INPUT phase that received no consensus action are "Phase Clo
 - `web/routes/auth.py` — `_ensure_tables()` call in chair_home
 - `web/routes/circforms.py` — Added `_copy_to_approved_folder()` on approve
 - `web/main.py` — Time formatting fix for on-the-hour display
-- `web/config.py` — Added `APPROVED_CIRCFORMS_DIR` config
+- `web/config.py` — Added `APPROVED_CIRCFORMS_DIR` config, updated default to OneDrive sync folder with local fallback
 - `web/templates/circ_forms.html` — `var(--accent)` → `var(--icc-accent)`
 - `web/templates/dashboard.html` — `var(--accent)` → `var(--icc-accent)`
 - `web/templates/meeting_detail.html` — `var(--accent)` → `var(--icc-accent)`, format_time filter
@@ -1012,13 +1012,17 @@ Proposals in PUBLIC_INPUT phase that received no consensus action are "Phase Clo
 - [x] DEVELOPMENT.md — SharePoint priority updated, approved_circforms feature added
 - [x] LLM_HANDOFF.md — SharePoint status, approved_circforms, drag-and-drop status updated
 - [ ] AGENT_GUIDE.md — no schema changes
-- [x] CLAUDE.md — no changes needed (structure unchanged)
+- [x] CLAUDE.md — removed stale test DB section, updated project structure
+- [x] web/DEVELOPMENT.md — updated approved circforms section with OneDrive + Power Automate pipeline
+- [x] web/LLM_HANDOFF.md — updated circ form pipeline, Power Automate section marked DONE
 - [ ] skills-update/ — no skill changes
 
 ### Known Issues from Session 36
 **New:**
 - **SharePoint Graph API permanently blocked** — Alex cannot register Azure AD apps. The `services/sharepoint.py` service will remain dormant. SharePoint upload happens via manual browser upload from `approved_circforms/` folder.
-- **Power Automate available as future automation** — Alex has access to create flows. Could automate SharePoint upload without admin consent via standard connectors.
+- **Power Automate flow is LIVE** — Flow "Move file from OneDrive for Business to SharePoint and notify me" configured and saved. Watches `IECC_Approved_CircForms` in OneDrive (including subfolders) → creates file in SharePoint Portal_TEST → deletes from OneDrive → sends mobile notification. Connected as alsmith@iccsafe.org.
+- **Test database destroyed** — Agent ran `cp iecc.db iecc_test.db` without checking state. The previous test DB (from 2026-03-09) was already empty/broken. No separate test database exists. CLAUDE.md updated to reflect this.
+- **config.py updated for OneDrive** — `APPROVED_CIRCFORMS_DIR` defaults to `~/OneDrive - International Code Council/IECC_Approved_CircForms/` with fallback to local `approved_circforms/`.
 
 **Resolved:**
 - **SharePoint upload built but dormant** (from Session 25 Known Issues) — Resolved by building local folder workaround. Graph API path abandoned.

@@ -118,7 +118,7 @@ This platform manages steps 2-5, replacing spreadsheets and manual document asse
 - **Meeting portal** with real-time action staging, HTMX-powered inline editing, and progress tracking
 - **"Go Live" mode** — full-viewport presentation view for Teams screen sharing with keyboard shortcuts
 - **Circulation form pipeline** — auto-generates circ form documents when chairs finalize meetings
-- **Approved docs auto-organize** — copies approved circ forms to SharePoint-matching folder structure for drag-and-drop upload
+- **SharePoint integration** — approved circ forms auto-copy to OneDrive, Power Automate uploads to SharePoint with mobile notification
 - **Document exports** — agenda, circulation form, and modification documents (Word format)
 - **Modification workflow** — secretariat approval of modifications before chairs see them
 - **16 user accounts** — 2 secretariat, 14 subgroup chairs across both tracks
